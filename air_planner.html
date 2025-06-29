@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dde3fd 50%, #0617da 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -30,12 +30,9 @@
 
         h1 {
             text-align: center;
-            color: #333;
             margin-bottom: 30px;
             font-size: 2.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #99caf5;
             background-clip: text;
         }
 
@@ -60,7 +57,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: #99caf5;
             color: white;
 			font-size: 12px;
 			margin: 12px 0px;
@@ -99,12 +96,12 @@
         }
 
         th {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+            background: #99caf5;
+            
             padding: 5px 10px;
 			font-size: 14px;
             text-align: left;
-            font-weight: 400;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             position: relative;
@@ -117,11 +114,32 @@
             left: 0;
             right: 0;
             height: 2px;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255inputs.forEach(input => {
+		input.addEventListener('input', function() {
+			updateTimeAccumulated();
+			updateDepthPressure();
+			updateChart();
+			updateAirConsumption();
+			updateRemainingPressure();
+			updateMetrics();
+
+		   
+		});
+		input.addEventListener('change', function() {
+			updateTimeAccumulated();
+			updateDepthPressure();
+			updateChart();
+			updateAirConsumption();
+			updateRemainingPressure();
+			updateMetrics();
+
+			
+		});
+	});, 0.3);
         }
 
         td {
-            padding: 7px;
+            padding: 5px;
 			font-size: 14px;
             border-bottom: 1px solid #f0f0f0;
             transition: background-color 0.3s ease;
@@ -138,7 +156,6 @@
         .editable {
             background: transparent;
             border: 2px solid transparent;
-            padding: 8px;
             border-radius: 6px;
             width: 100%;
             font-size: 14px;
@@ -148,7 +165,6 @@
 		.readonly {
             background: transparent;
             border: 2px solid transparent;
-            padding: 8px;
             border-radius: 6px;
             width: 100%;
             font-size: 14px;
@@ -201,9 +217,8 @@
 
         .drag-handle {
             cursor: grab;
-            font-size: 16px;
-            padding: 5px;
-            color: #667eea;
+            font-size: 14px;
+            
             user-select: none;
         }
 
@@ -226,9 +241,9 @@
         }
 
         .row-number {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+            background: #99caf5;
             width: 50px;
+			color: black;
             text-align: center;
             font-weight: bold;
         }
@@ -285,20 +300,19 @@
 
         .chart-container h2 {
             text-align: center;
-            color: #333;
+            color: #99caf5;
             margin-bottom: 20px;
+			max-height: 50%;
             font-size: 1.8rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            
             background-clip: text;
         }
 
         #depthChart {
             width: 800px;
 			max-width:80%
-            height: 60%;
-			max-height: 80%;
+			height: 70%;
+			max-height: 70%;
             display: block;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -314,12 +328,9 @@
         }
 
         .settings-section h3 {
-            color: #333;
             margin-bottom: 15px;
             font-size: 1.3rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #99caf5;
             background-clip: text;
         }
 
@@ -427,11 +438,9 @@
                 </div>
             </div>
         </div>
-		
 
-		
         <div class="chart-container">
-            <h2>Diepteprofiel</h2>
+            <h2>📈 Duikprofiel</h2>
             <canvas id="depthChart" width="800"></canvas>
         </div>
         <div class="table-container">
@@ -443,8 +452,8 @@
                         <th class="time">Tijd (min)</th>
                         <th class="depth">diepte (m)</th>
                         <th class="depth_pressure">bar druk</th>
-						<th class="air_consumption">luchtverbruik (L)</th>
-						<th class="air_consumption">resterende flesdruk (bar)</th>
+						<th class="air_consumption">verbruik (L)</th>
+						<th class="air_consumption">flesdruk (bar)</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -469,9 +478,9 @@
             </table>
         </div>
 		<div class="controls">
-            <button class="btn btn-primary" onclick="addRow()">➕ Add Row</button>
-			<button class="btn btn-primary" onclick="add2Rows()">➕ Add 2 Rows</button>
-			<button class="btn btn-primary" onclick="addSafetyStop()">➕ Add Safety stop</button>
+            <button class="btn btn-primary" onclick="addRow()">➕ Row</button>
+			<button class="btn btn-primary" onclick="add2Rows()">➕ 2 Rows</button>
+			<button class="btn btn-primary" onclick="addSafetyStop()">➕ Safety stop</button>
         </div>
 				<div class="stats-grid">
             <div class="stat-card">
