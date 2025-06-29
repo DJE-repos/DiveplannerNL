@@ -16,14 +16,13 @@ function initializeChart() {
 		data: {
 			labels: [],
 			datasets: [{
-				label: 'Depth Profile',
+				label: 'duikprofiel',
 				data: [],
-				borderColor: 'rgb(102, 126, 234)',
+				borderColor: '#99caf5',
 				backgroundColor: 'rgba(102, 126, 234, 0.1)',
 				borderWidth: 3,
 				fill: true,
-				tension: 0.05,
-				pointBackgroundColor: 'rgb(118, 75, 162)',
+				pointBackgroundColor: '#99caf5',
 				pointBorderColor: 'white',
 				pointBorderWidth: 2,
 				pointRadius: 6,
@@ -212,7 +211,7 @@ function updateRemainingPressure() {
 		if(remainingCylinderPressure <=0){
 			remainingCylinderPressureInput.value = 0
 		} else {
-			remainingCylinderPressureInput.value = remainingCylinderPressure;
+			remainingCylinderPressureInput.value = Math.floor(remainingCylinderPressure);
 		}
 
 		
@@ -579,12 +578,40 @@ function loadCache(){
 	
 }
 
-// Initialize drag and drop for existing rows
+function PresetsAddEventListeners(){
+	airConsumptionPreset=document.querySelector('input[name="airConsumption_preset"]');
+	airCylinderPreset=document.querySelector('input[name="Flesinhoud"]');
+	airPressurePreset=document.querySelector('input[name="Flesdruk"]');
+	inputs=[airConsumptionPreset, airCylinderPreset, airPressurePreset];
+	inputs.forEach(input => {
+		input.addEventListener('input', function() {
+			updateTimeAccumulated();
+			updateDepthPressure();
+			updateChart();
+			updateAirConsumption();
+			updateRemainingPressure();
+			updateMetrics();
+		});
+		input.addEventListener('change', function() {
+			updateTimeAccumulated();
+			updateDepthPressure();
+			updateChart();
+			updateAirConsumption();
+			updateRemainingPressure();
+			updateMetrics();
+		});
+	});
+	
+}
+
+// Initialize drag and drop for existing rows and eventlisteners on default inputs
 document.addEventListener('DOMContentLoaded', function() {
 	document.querySelectorAll('#tableBody tr').forEach(row => {
 		setupDragAndDrop(row);
 		setupInputListeners(row);
 	});
+	
+	PresetsAddEventListeners();
 	initializeChart();
 	updateChart();
 	updateAirConsumption();
