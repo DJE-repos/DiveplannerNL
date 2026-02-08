@@ -36,7 +36,7 @@
             background-clip: text;
         }
 
-        .controls {
+        .table-controls {
             margin-bottom: 30px;
             display: flex;
             gap: 15px;
@@ -445,6 +445,7 @@
         .chart-container h2.collapsible.collapsed {
             margin-bottom: 0;
         }
+        
     </style>
 </head>
 <body>
@@ -488,46 +489,49 @@
             <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
                 𝄜 Duiktabel <span class="collapse-arrow">▼</span>
             </h2>
-            <div class="table-container">
-                <table id="dataTable">
-                <thead>
-                    <tr id="headerRow">
-                        <th class="row-number">#</th>
-                        <th class="time_cumu">Tijd cumu</th>
-                        <th class="time">Tijd (min)</th>
-                        <th class="depth">diepte (m)</th>
-                        <th class="depth_pressure">bar druk</th>
-						<th class="air_consumption">verbruik (L)</th>
-						<th class="air_consumption">flesdruk (bar)</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr class="fade-in" draggable="true">
-                        <td class="row-number drag-handle">1</td>
-                        <td><input type="number" name="time_cumu_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
-                        <td><input type="number" name="time_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
-                        <td><input type="number" name="depth_val" class="readonly" value="0" placeholder="0" step="0.1" readonly="readonly"></td>
-                        <td><input type="number" name="depth_pressure_val" class="readonly" value="1.0" placeholder="1.0" step="0.1" readonly="readonly"></td>
-						<td><input type="number" name="air_consumption_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
-						<td><input type="number" name="remaining_pressure_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
-                        <td class="actions">
-                            <div class="move-buttons">
-                                <button class="btn btn-move" onclick="moveRowUp(this)" title="Move Up">↑</button>
-                                <button class="btn btn-move" onclick="moveRowDown(this)" title="Move Down">↓</button>
-                                <button class="btn btn-danger" onclick="deleteRow(this)">🗑️</button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-content-wrapper">
+                <div class="table-container">
+                    <table id="dataTable">
+                    <thead>
+                        <tr id="headerRow">
+                            <th class="row-number">#</th>
+                            <th class="time_cumu">Tijd cumu</th>
+                            <th class="time">Tijd (min)</th>
+                            <th class="depth">diepte (m)</th>
+                            <th class="depth_pressure">bar druk</th>
+                            <th class="air_consumption">verbruik (L)</th>
+                            <th class="air_consumption">flesdruk (bar)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr class="fade-in" draggable="true">
+                            <td class="row-number drag-handle">1</td>
+                            <td><input type="number" name="time_cumu_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
+                            <td><input type="number" name="time_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
+                            <td><input type="number" name="depth_val" class="readonly" value="0" placeholder="0" step="0.1" readonly="readonly"></td>
+                            <td><input type="number" name="depth_pressure_val" class="readonly" value="1.0" placeholder="1.0" step="0.1" readonly="readonly"></td>
+                            <td><input type="number" name="air_consumption_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
+                            <td><input type="number" name="remaining_pressure_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
+                            <td class="actions">
+                                <div class="move-buttons">
+                                    <button class="btn btn-move" onclick="moveRowUp(this)" title="Move Up">↑</button>
+                                    <button class="btn btn-move" onclick="moveRowDown(this)" title="Move Down">↓</button>
+                                    <button class="btn btn-danger" onclick="deleteRow(this)">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+                <div class="table-controls">
+                    <button class="btn btn-primary" onclick="addRow()">➕ Row</button>
+                    <button class="btn btn-primary" onclick="add2Rows()">➕ 2 Rows</button>
+                    <button class="btn btn-primary" onclick="addSafetyStop()">➕ Safety stop</button>
+                </div>
+            </div>
         </div>
-        </div>
-		<div class="controls">
-            <button class="btn btn-primary" onclick="addRow()">➕ Row</button>
-			<button class="btn btn-primary" onclick="add2Rows()">➕ 2 Rows</button>
-			<button class="btn btn-primary" onclick="addSafetyStop()">➕ Safety stop</button>
-        </div>
+		
 				<div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="totalTime" name="totalTimeMetric">0</div>
