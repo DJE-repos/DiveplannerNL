@@ -29,9 +29,9 @@
         }
 
         h1 {
-            text-align: center;
+            text-align: left;
             margin-bottom: 30px;
-            font-size: 2.5rem;
+            font-size: 1.3rem;
             color: #99caf5;
             background-clip: text;
         }
@@ -277,11 +277,11 @@
         }
 
         .chart-container h2 {
-            text-align: center;
+            text-align: left;
             color: #99caf5;
             margin-bottom: 20px;
 			max-height: 50%;
-            font-size: 1.8rem;
+            font-size: 1.3rem;
             
             background-clip: text;
         }
@@ -452,7 +452,7 @@
         <h1>🤿 Duikplanner</h1>
 		<div class="settings-section">
             <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'grid' : 'none';">
-                <span class="collapse-arrow">▼</span> ⚙️ Dive Settings
+                ⚙️ Dive Settings <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row">
                 <div class="input-group">
@@ -480,13 +480,13 @@
 
         <div class="chart-container">
             <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
-                <span class="collapse-arrow">▼</span> 📈 Duikprofiel
+                📈 Duikprofiel <span class="collapse-arrow">▼</span> 
             </h2>
             <canvas id="depthChart" width="800"></canvas>
         </div>
         <div class="chart-container">
             <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
-                <span class="collapse-arrow">▼</span> 📊 Duiktabel
+                📊 Duiktabel <span class="collapse-arrow">▼</span>
             </h2>
             <div class="table-container">
                 <table id="dataTable">
