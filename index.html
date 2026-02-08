@@ -449,7 +449,7 @@
 </head>
 <body>
     <div>
-        <h1>🤿 Duikplanner</h1>
+        <h1 class="container">🤿 Duikplanner</h1>
 		<div class="settings-section">
             <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'grid' : 'none';">
                 ⚙️ Dive Settings <span class="collapse-arrow">▼</span> 
@@ -522,11 +522,11 @@
                     </tbody>
                 </table> 
             </div>
-            <div class="controls">
+        </div>
+        <div class="controls">
                 <button class="btn btn-primary" onclick="addRow()">➕ Row</button>
                 <button class="btn btn-primary" onclick="add2Rows()">➕ 2 Rows</button>
                 <button class="btn btn-primary" onclick="addSafetyStop()">➕ Safety stop</button>
-            </div>
         </div>
 		
 				<div class="stats-grid">
