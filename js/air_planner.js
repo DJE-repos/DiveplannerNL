@@ -1,11 +1,218 @@
 let rowCounter = 1;
 let depthChart = null;
+let airTableData = null;
+
+// Load air table data
+async function loadAirTable() {
+	try {
+		const response = await fetch('air_table.json');
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const jsonData = await response.json();
+		console.log('Raw JSON loaded:', jsonData);
+		
+		// Extract Table A from the JSON structure
+		if (jsonData['Table A']) {
+			airTableData = jsonData['Table A'];
+		} else {
+			airTableData = jsonData;
+		}
+		
+		console.log('Air table data extracted:', airTableData);
+		
+		// Validate structure
+		if (!airTableData.rows || !Array.isArray(airTableData.rows)) {
+			console.error('Invalid air table structure: missing or invalid rows array');
+			airTableData = null;
+			return;
+		}
+		if (!airTableData.headers || !Array.isArray(airTableData.headers)) {
+			console.error('Invalid air table structure: missing or invalid headers array');
+			airTableData = null;
+			return;
+		}
+		console.log('✓ Air table structure validated');
+	} catch (error) {
+		console.error('Error loading air table:', error);
+		airTableData = null;
+	}
+}
+
+// Calculate Nultijd and Herhalingsgroep based on MDD and total time
+function updateNultijdAndGroup() {
+	if (!airTableData || !airTableData.rows) {
+		console.warn('Air table data not loaded yet');
+		return;
+	}
+	
+	const mddInput = document.querySelector('input[name="MOD"]');
+	if (!mddInput) return;
+	
+	const mdd = parseFloat(mddInput.value) || 0;
+	
+	// Calculate rounded MDD: roundup(MDD/3)*3
+	const roundedMDD = Math.ceil(mdd / 3) * 3;
+	
+	console.log(`MDD: ${mdd}, Rounded MDD: ${roundedMDD}`);
+	
+	// Find the row matching the rounded MDD
+	const matchingRowIndex = airTableData.rows.findIndex(row => row[0] === roundedMDD);
+	
+	if (matchingRowIndex === -1) {
+		console.warn(`No row found for MDD ${roundedMDD}`);
+		return;
+	}
+	
+	const row = airTableData.rows[matchingRowIndex];
+	const nultijd = row[1]; // Second column is Nultijd
+	
+	console.log(`Found row at index ${matchingRowIndex}: ${JSON.stringify(row)}`);
+	console.log(`Nultijd: ${nultijd}`);
+	
+	// Update Nultijd display
+	document.getElementById('nultijd').textContent = nultijd;
+	console.log(`✓ Updated nultijd to: ${nultijd}`);
+	
+	// Calculate interval group based on total time
+	const totalTime = getTotalTime();
+	console.log(`Total time: ${totalTime}`);
+	updateIntervalGroup(matchingRowIndex, totalTime);
+}
+
+// Find and update the interval group based on total time
+function updateIntervalGroup(rowIndex, totalTime) {
+	if (!airTableData || !airTableData.rows || !airTableData.headers) {
+		console.warn('Air table data not properly loaded');
+		return;
+	}
+	
+	if (rowIndex < 0 || rowIndex >= airTableData.rows.length) {
+		console.warn(`Invalid row index: ${rowIndex}`);
+		return;
+	}
+	
+	const row = airTableData.rows[rowIndex];
+	const headers = airTableData.headers;
+	
+	console.log(`Headers: ${JSON.stringify(headers)}`);
+	console.log(`Row data: ${JSON.stringify(row)}`);
+	
+	// Start from column 2 (index 2) which is 'A' - skip MDD and Nultijd
+	let intervalGroup = null; // Use null to track if we found a match
+	
+	// Find the first column where the value is >= totalTime
+	for (let i = 2; i < headers.length; i++) {
+		const headerLetter = headers[i];
+		const timeValue = row[i];
+		
+		console.log(`Checking column ${i} (${headerLetter}): value=${timeValue}, totalTime=${totalTime}, match=${timeValue !== null && timeValue !== undefined && totalTime <= timeValue}`);
+		
+		// Skip null/undefined values and find first match
+		if (timeValue !== null && timeValue !== undefined && totalTime <= timeValue) {
+			intervalGroup = headerLetter;
+			console.log(`  -> Found match! Setting to ${headerLetter}`);
+			break;
+		}
+	}
+	
+	// If total time exceeds all values, use the last valid (non-null) group
+	if (intervalGroup === null) {
+		console.log('No match found in forward search, checking backward for last valid value...');
+		for (let i = headers.length - 1; i >= 2; i--) {
+			const timeValue = row[i];
+			if (timeValue !== null && timeValue !== undefined) {
+				intervalGroup = headers[i];
+				console.log(`  -> Found last valid at column ${i} (${headers[i]}): ${intervalGroup}`);
+				break;
+			}
+		}
+	}
+	
+	// Fallback to 'A' if somehow still null
+	if (intervalGroup === null) {
+		intervalGroup = 'A';
+		console.log('Fallback to A');
+	}
+	
+	console.log(`Final interval group: ${intervalGroup}`);
+	console.log(`✓ Updated intervalgroup to: ${intervalGroup}`);
+	document.getElementById('intervalgroup').textContent = intervalGroup;
+}
+
+// Check if total dive time exceeds nultijd and apply warning color
+function updateNultijdWarning() {
+	const nultijdElement = document.getElementById('nultijd');
+	if (!nultijdElement) return;
+	
+	const nultijdValue = parseFloat(nultijdElement.textContent) || 0;
+	const totalTime = getTotalTime();
+	const nultijdCard = nultijdElement.closest('.stat-card');
+	
+	console.log(`Nultijd: ${nultijdValue}, Total Time: ${totalTime}`);
+	
+	if (totalTime > nultijdValue && nultijdValue > 0) {
+		// Add warning color
+		if (!nultijdCard.classList.contains('warning')) {
+			nultijdCard.classList.add('warning');
+			console.log(`⚠️ WARNING: Total dive time (${totalTime}min) exceeds nultijd (${nultijdValue}min)`);
+		}
+	} else {
+		// Remove warning color
+		if (nultijdCard.classList.contains('warning')) {
+			nultijdCard.classList.remove('warning');
+			console.log(`✓ Total dive time within nultijd limits`);
+		}
+	}
+}
+
+// Update MDD based on maximum depth in table
+function updateMDDFromMaxDepth() {
+	const maxDepth = getMaxDepth();
+	const mddInput = document.querySelector('input[name="MOD"]');
+	
+	if (mddInput && maxDepth > 0) {
+		mddInput.value = maxDepth;
+		console.log(`✓ Updated MDD to: ${maxDepth}`);
+		// Trigger update of nultijd and interval group
+		updateNultijdAndGroup();
+	}
+}
 
 // Initialize the chart when page loads
 document.addEventListener('DOMContentLoaded', function() {
-	document.querySelectorAll('#tableBody tr').forEach(setupDragAndDrop);
-	initializeChart();
-	updateChart();
+	// First load the air table
+	loadAirTable().then(() => {
+		console.log('Air table loaded successfully');
+		
+		// Setup existing table rows
+		document.querySelectorAll('#tableBody tr').forEach(row => {
+			setupDragAndDrop(row);
+			setupInputListeners(row);
+		});
+		
+		// Add event listener to MDD input
+		const mddInput = document.querySelector('input[name="MOD"]');
+		if (mddInput) {
+			mddInput.addEventListener('input', updateNultijdAndGroup);
+			mddInput.addEventListener('change', updateNultijdAndGroup);
+		}
+		
+		// Setup preset input listeners
+		PresetsAddEventListeners();
+		
+		// Initialize and update chart
+		initializeChart();
+		updateChart();
+		updateAirConsumption();
+		updateRemainingPressure();
+		
+		// Initial calculation of nultijd and interval group
+		updateMetrics();
+		updateNultijdAndGroup();
+		
+		console.log('Initialization complete');
+	});
 });
 
 function initializeChart() {
@@ -348,6 +555,7 @@ function addRow(time=0, depth=0) {
 	updateChart();
 	updateAirConsumption();
 	updateRemainingPressure();
+	updateMetrics();
 }
 
 // Function to calculate total of 'time' column (time_val)
@@ -447,6 +655,15 @@ function updateMetrics() {
 	document.getElementById('maxDepth').textContent = calculations.maxDepth.toFixed(1);
 	document.getElementById('avgDepth').textContent = calculations.avgDepth.toFixed(1);
 	document.getElementById('totalAirConsumption').textContent = calculations.totalAirConsumption.toFixed(1);
+	
+	// Update MDD based on maximum depth
+	updateMDDFromMaxDepth();
+	
+	// Update interval group based on new total time
+	updateNultijdAndGroup();
+	
+	// Check and update nultijd warning color
+	updateNultijdWarning();
 }
 
 function add2Rows(){
@@ -497,6 +714,7 @@ function moveRowUp(button) {
 		updateChart();
 		updateAirConsumption();
 		updateRemainingPressure();
+		updateMetrics();
 	}
 }
 
@@ -510,6 +728,7 @@ function moveRowDown(button) {
 		updateChart();
 		updateAirConsumption();
 		updateRemainingPressure();
+		updateMetrics();
 	}
 }
 
@@ -604,16 +823,4 @@ function PresetsAddEventListeners(){
 	
 }
 
-// Initialize drag and drop for existing rows and eventlisteners on default inputs
-document.addEventListener('DOMContentLoaded', function() {
-	document.querySelectorAll('#tableBody tr').forEach(row => {
-		setupDragAndDrop(row);
-		setupInputListeners(row);
-	});
-	
-	PresetsAddEventListeners();
-	initializeChart();
-	updateChart();
-	updateAirConsumption();
-	updateRemainingPressure();
-});
+// Air table lookup complete

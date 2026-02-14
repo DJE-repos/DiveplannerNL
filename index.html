@@ -367,6 +367,20 @@
             border-color: #667eea;
         }
 
+        .stat-card.warning {
+            border-color: #FF9500;
+        }
+
+        .stat-card.warning .stat-value {
+            background: linear-gradient(45deg, #FF9500, #FF6B00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card.warning:hover {
+            border-color: #FF9500;
+        }
+
         .stat-value {
             font-size: 1.5rem;
             font-weight: bold;
@@ -471,7 +485,7 @@
                 </div>
                 <div class="input-group">
 					<label for="MOD">MDD (m)</label>
-					<input type="number" name="MOD" value="15" step="1" min="0">
+					<input type="number" name="MOD" value="0" step="1" min="0">
                 </div>
                 <div class="input-group">
 					<label for="EANₓ">EAN (%)</label>
@@ -549,6 +563,14 @@
             <div class="stat-card">
                 <div class="stat-value" id="totalAirConsumption">0</div>
                 <div class="stat-label">Total Air (l)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="nultijd">0</div>
+                <div class="stat-label">Nultijd (min)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="intervalgroup">A</div>
+                <div class="stat-label">Herhalingsgroep</div>
             </div>
         </div>
 		
