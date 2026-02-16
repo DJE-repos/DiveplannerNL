@@ -425,30 +425,27 @@ function updateRemainingPressure() {
 		startCylinderPressure = remainingCylinderPressure;
 	});
 }
+
+// Shared handler for input changes to prevent memory leaks from duplicate listeners
+function handleInputChange() {
+	updateTimeAccumulated();
+	updateDepthPressure();
+	updateChart();
+	updateAirConsumption();
+	updateRemainingPressure();
+	updateMetrics();
+}
+
 // Add event listeners to update chart when data changes
 function setupInputListeners(row) {
 	const inputs = row.querySelectorAll('.editable');
 	inputs.forEach(input => {
-		input.addEventListener('input', function() {
-			updateTimeAccumulated();
-			updateDepthPressure();
-			updateChart();
-			updateAirConsumption();
-			updateRemainingPressure();
-			updateMetrics();
-
-		   
-		});
-		input.addEventListener('change', function() {
-			updateTimeAccumulated();
-			updateDepthPressure();
-			updateChart();
-			updateAirConsumption();
-			updateRemainingPressure();
-			updateMetrics();
-
-			
-		});
+		// Prevent duplicate listener attachment
+		if (input.dataset.listenersAttached) return;
+		
+		input.addEventListener('input', handleInputChange);
+		input.addEventListener('change', handleInputChange);
+		input.dataset.listenersAttached = 'true';
 	});
 }
 
@@ -639,15 +636,7 @@ function getAllCalculations() {
 	};
 }
 
-// Function to get all calculations at once
-function getAllCalculations() {
-	return {
-		totalTime: getTotalTime(),
-		maxDepth: getMaxDepth(),
-		avgDepth: getAvgDepth(),
-		totalAirConsumption: getTotalAirConsumption()
-	};
-}
+
 // Optional: Function to get all calculations at once
 function updateMetrics() {
 	const calculations = getAllCalculations();
@@ -797,30 +786,23 @@ function loadCache(){
 	
 }
 
+let presetsListenersSetup = false;
+
 function PresetsAddEventListeners(){
-	airConsumptionPreset=document.querySelector('input[name="airConsumption_preset"]');
-	airCylinderPreset=document.querySelector('input[name="Flesinhoud"]');
-	airPressurePreset=document.querySelector('input[name="Flesdruk"]');
-	inputs=[airConsumptionPreset, airCylinderPreset, airPressurePreset];
+	// Prevent duplicate listener attachment
+	if (presetsListenersSetup) return;
+	
+	const airConsumptionPreset = document.querySelector('input[name="airConsumption_preset"]');
+	const airCylinderPreset = document.querySelector('input[name="Flesinhoud"]');
+	const airPressurePreset = document.querySelector('input[name="Flesdruk"]');
+	const inputs = [airConsumptionPreset, airCylinderPreset, airPressurePreset];
+	
 	inputs.forEach(input => {
-		input.addEventListener('input', function() {
-			updateTimeAccumulated();
-			updateDepthPressure();
-			updateChart();
-			updateAirConsumption();
-			updateRemainingPressure();
-			updateMetrics();
-		});
-		input.addEventListener('change', function() {
-			updateTimeAccumulated();
-			updateDepthPressure();
-			updateChart();
-			updateAirConsumption();
-			updateRemainingPressure();
-			updateMetrics();
-		});
+		input.addEventListener('input', handleInputChange);
+		input.addEventListener('change', handleInputChange);
 	});
 	
+	presetsListenersSetup = true;
 }
 
 // Air table lookup complete
