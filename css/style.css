@@ -541,6 +541,14 @@ h2.collapsible.collapsed .collapse-arrow {
     transform: rotate(-90deg);
 }
 
+/* Fallback: hide the immediate content wrapper when a header starts collapsed. 
+   This complements the :has() rules for browsers that support it. */
+h2.collapsible.collapsed + .table-content-wrapper,
+h2.collapsible.collapsed + .air-table-wrapper,
+h3.collapsible.collapsed + .settings-row {
+    display: none;
+}
+
 .settings-section:has(h3.collapsed),
 .chart-container:has(h2.collapsed) {
     padding: 10px;

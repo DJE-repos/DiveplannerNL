@@ -126,16 +126,15 @@
         </div>
 
         <div class="air-table-container">
-            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
+            <h2 class="collapsible collapsed" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
                 📊 Duiktabel (Table A) <span class="collapse-arrow">▼</span>
             </h2>
-            <div class="air-table-wrapper">
+            <div class="air-table-wrapper" style="display: none;">
                 <table id="airTableDisplay"></table>
             </div>
         </div>
 		
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script type="text/javascript" src="js/air_planner.js"></script>
 </body>
