@@ -360,6 +360,10 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             border: 2px solid transparent;
             transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
         }
 
         .stat-card:hover {
@@ -381,6 +385,20 @@
             border-color: #FF9500;
         }
 
+        .stat-card.warning-severe {
+            border-color: #FF0000;
+        }
+
+        .stat-card.warning-severe .stat-value {
+            background: linear-gradient(45deg, #FF0000, #CC0000);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card.warning-severe:hover {
+            border-color: #FF0000;
+        }
+
         .stat-value {
             font-size: 1.5rem;
             font-weight: bold;
@@ -397,7 +415,88 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-		
+
+        .air-table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .air-table-container h2 {
+            color: #99caf5;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .air-table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+        }
+
+        #airTableDisplay {
+            border-collapse: collapse;
+            background: white;
+            font-size: 12px;
+        }
+
+        #airTableDisplay th,
+        #airTableDisplay td {
+            border: 1px solid #e0e0e0;
+            padding: 8px;
+            text-align: center;
+        }
+
+        #airTableDisplay th {
+            background: #99caf5;
+            color: white;
+            font-weight: bold;
+        }
+
+        #airTableDisplay tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        #airTableDisplay tr:hover {
+            background: #eff0ff;
+        }
+
+        #airTableDisplay td.highlighted {
+            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        #airTableDisplay td.mdd-column {
+            background: rgba(102, 126, 234, 0.1);
+            font-weight: bold;
+        }
+
+        #airTableDisplay td.nultijd-separator {
+            border-left: 3px solid #667eea;
+        }
+
+        #airTableDisplay th.nultijd-separator {
+            border-left: 3px solid #667eea;
+        }
+
+        #airTableDisplay td.nultijd-match {
+            border-right: 3px solid #667eea;
+            border-bottom: 3px solid #667eea;
+            border-top: none;
+        }
+
+        #airTableDisplay td.nultijd-match.nultijd-match-no-bottom {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #airTableDisplay td.nultijd-connector-bottom {
+            border-bottom: 3px solid #667eea;
+        }
+
         @keyframes fadeOut {
             from {
                 opacity: 1;
@@ -468,7 +567,7 @@
         <h1>🤿 Duikplanner</h1>
 		<div class="settings-section">
             <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'grid' : 'none';">
-                ⚙️ Dive Settings <span class="collapse-arrow">▼</span> 
+                ⚙️ Duik parameters <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row">
                 <div class="input-group">
@@ -488,8 +587,8 @@
 					<input type="number" name="MOD" value="0" step="1" min="0">
                 </div>
                 <div class="input-group">
-					<label for="EANₓ">EAN (%)</label>
-					<input type="number" name="EANx" value="21" step="1" min="0">
+					<label for="EANₓ">EANₓ (%)</label>
+					<input type="number" name="EANx" value="21" step="1" min="21">
                 </div>
             </div>
         </div>
@@ -557,6 +656,14 @@
                 <div class="stat-label">MOD (m)</div>
             </div>
             <div class="stat-card">
+                <div class="stat-value" id="EquivilantAirDepth">0</div>
+                <div class="stat-label">EAD (m)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pO2">0</div>
+                <div class="stat-label">pO₂ (%)</div>
+            </div>
+            <div class="stat-card">
                 <div class="stat-value" id="avgDepth">0</div>
                 <div class="stat-label">Avg Depth (m)</div>
             </div>
@@ -571,6 +678,15 @@
             <div class="stat-card">
                 <div class="stat-value" id="intervalgroup">A</div>
                 <div class="stat-label">HHG</div>
+            </div>
+        </div>
+
+        <div class="air-table-container">
+            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
+                📊 Duiktabel (Table A) <span class="collapse-arrow">▼</span>
+            </h2>
+            <div class="air-table-wrapper">
+                <table id="airTableDisplay"></table>
             </div>
         </div>
 		

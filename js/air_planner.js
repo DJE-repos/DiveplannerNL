@@ -39,7 +39,7 @@ async function loadAirTable() {
 	}
 }
 
-// Calculate Nultijd and Herhalingsgroep based on MDD and total time
+// Calculate Nultijd and Herhalingsgroep based on MDD/EAD and total time
 function updateNultijdAndGroup() {
 	if (!airTableData || !airTableData.rows) {
 		console.warn('Air table data not loaded yet');
@@ -49,18 +49,31 @@ function updateNultijdAndGroup() {
 	const mddInput = document.querySelector('input[name="MOD"]');
 	if (!mddInput) return;
 	
-	const mdd = parseFloat(mddInput.value) || 0;
+	const eadElement = document.getElementById('EquivilantAirDepth');
+	const eadCard = eadElement?.closest('.stat-card');
 	
-	// Calculate rounded MDD: roundup(MDD/3)*3
-	const roundedMDD = Math.ceil(mdd / 3) * 3;
+	// Check if EAD is visible - if so, use EAD value instead of MOD
+	let depthValue;
+	if (eadCard && eadCard.style.display === 'flex') {
+		// Use EAD value
+		depthValue = parseFloat(eadElement.textContent) || 0;
+		console.log(`Using EAD: ${depthValue}m for nultijd/HHG calculation`);
+	} else {
+		// Use MOD value
+		depthValue = parseFloat(mddInput.value) || 0;
+		console.log(`Using MOD: ${depthValue}m for nultijd/HHG calculation`);
+	}
 	
-	console.log(`MDD: ${mdd}, Rounded MDD: ${roundedMDD}`);
+	// Calculate rounded depth: roundup(depth/3)*3
+	const roundedDepth = Math.ceil(depthValue / 3) * 3;
 	
-	// Find the row matching the rounded MDD
-	const matchingRowIndex = airTableData.rows.findIndex(row => row[0] === roundedMDD);
+	console.log(`Depth: ${depthValue}, Rounded Depth: ${roundedDepth}`);
+	
+	// Find the row matching the rounded depth
+	const matchingRowIndex = airTableData.rows.findIndex(row => row[0] === roundedDepth);
 	
 	if (matchingRowIndex === -1) {
-		console.warn(`No row found for MDD ${roundedMDD}`);
+		console.warn(`No row found for depth ${roundedDepth}`);
 		return;
 	}
 	
@@ -138,6 +151,9 @@ function updateIntervalGroup(rowIndex, totalTime) {
 	console.log(`Final interval group: ${intervalGroup}`);
 	console.log(`✓ Updated intervalgroup to: ${intervalGroup}`);
 	document.getElementById('intervalgroup').textContent = intervalGroup;
+	
+	// Highlight the corresponding air table cell
+	highlightAirTableCell();
 }
 
 // Check if total dive time exceeds nultijd and apply warning color
@@ -185,6 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	loadAirTable().then(() => {
 		console.log('Air table loaded successfully');
 		
+		// Display the air table
+		displayAirTable();
+		
 		// Setup existing table rows
 		document.querySelectorAll('#tableBody tr').forEach(row => {
 			setupDragAndDrop(row);
@@ -194,8 +213,23 @@ document.addEventListener('DOMContentLoaded', function() {
 		// Add event listener to MDD input
 		const mddInput = document.querySelector('input[name="MOD"]');
 		if (mddInput) {
+			mddInput.addEventListener('input', updateMetrics);
+			mddInput.addEventListener('change', updateMetrics);
 			mddInput.addEventListener('input', updateNultijdAndGroup);
 			mddInput.addEventListener('change', updateNultijdAndGroup);
+			mddInput.addEventListener('input', calculateEAD);
+			mddInput.addEventListener('change', calculateEAD);
+			mddInput.addEventListener('input', calculatepO2);
+			mddInput.addEventListener('change', calculatepO2);
+		}
+		
+		// Add event listener to EANx input
+		const eanxInput = document.querySelector('input[name="EANx"]');
+		if (eanxInput) {
+			eanxInput.addEventListener('input', calculateEAD);
+			eanxInput.addEventListener('change', calculateEAD);
+			eanxInput.addEventListener('input', calculatepO2);
+			eanxInput.addEventListener('change', calculatepO2);
 		}
 		
 		// Setup preset input listeners
@@ -210,6 +244,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		// Initial calculation of nultijd and interval group
 		updateMetrics();
 		updateNultijdAndGroup();
+		calculateEAD();
+		calculatepO2();
 		
 		console.log('Initialization complete');
 	});
@@ -638,14 +674,225 @@ function getAllCalculations() {
 
 
 // Optional: Function to get all calculations at once
+// Calculate EAD (Equivalent Air Depth) for Nitrox
+function calculateEAD() {
+	const eanxInput = document.querySelector('input[name="EANx"]');
+	const modInput = document.querySelector('input[name="MOD"]');
+	const eadElement = document.getElementById('EquivilantAirDepth');
+	const eadCard = eadElement?.closest('.stat-card');
+	
+	if (!eanxInput || !modInput) return;
+	
+	const eanx = parseFloat(eanxInput.value) || 21;
+	const mod = parseFloat(modInput.value) || 0;
+	
+	// Only show EAD card if EANx > 21
+	if (eanx > 21) {
+		if (eadCard) {
+			eadCard.style.display = 'flex';
+		}
+		
+		// Calculate EAD using the formula: ((100-EANx)%*(MOD+10))/0.79)-10
+		const ead = (((100 - eanx)/100) * (mod + 10) / 0.79) - 10;
+		const eadRounded = Math.ceil(ead);
+		eadElement.textContent = eadRounded;
+		console.log(`✓ Updated EAD to: ${eadRounded} (EANx: ${eanx}%, MOD: ${mod}m)`);
+		
+		// Recalculate nultijd and HHG using EAD value
+		updateNultijdAndGroup();
+	} else {
+		// Hide EAD card if EANx <= 21
+		if (eadCard) {
+			eadCard.style.display = 'none';
+		}
+		console.log(`EAD card hidden (EANx: ${eanx}% is not greater than 21%)`);
+		
+		// Recalculate nultijd and HHG using MOD value
+		updateNultijdAndGroup();
+	}
+}
+
+// Calculate pO2 (Partial Pressure of Oxygen) for Nitrox
+function calculatepO2() {
+	const eanxInput = document.querySelector('input[name="EANx"]');
+	const modInput = document.querySelector('input[name="MOD"]');
+	const pO2Element = document.getElementById('pO2');
+	const pO2Card = pO2Element?.closest('.stat-card');
+	
+	if (!eanxInput || !modInput) return;
+	
+	const eanx = parseFloat(eanxInput.value) || 21;
+	const mod = parseFloat(modInput.value) || 0;
+	
+	// Calculate pO2 using the formula: pO2=(EANx/100)*(MOD/10+1)
+	const pO2 = (eanx / 100) * (mod / 10 + 1);
+	const pO2Rounded = pO2.toFixed(2);
+	pO2Element.textContent = pO2Rounded;
+	console.log(`✓ Updated pO2 to: ${pO2Rounded} (EANx: ${eanx}%, MOD: ${mod}m)`);
+	
+	// Apply warning styling based on pO2 value
+	if (pO2Card) {
+		// Remove both warning classes first
+		pO2Card.classList.remove('warning', 'warning-severe');
+		
+		if (pO2 >= 1.6) {
+			// Severe warning (red) for pO2 >= 1.6
+			pO2Card.classList.add('warning-severe');
+			console.log(`⚠️ SEVERE WARNING: pO2 (${pO2Rounded}) is >= 1.6`);
+		} else if (pO2 > 1.4) {
+			// Warning (orange) for pO2 > 1.4 but < 1.6
+			pO2Card.classList.add('warning');
+			console.log(`⚠️ WARNING: pO2 (${pO2Rounded}) exceeds 1.4`);
+		}
+	}
+}
+
+// Display and highlight the air table
+function displayAirTable() {
+	if (!airTableData || !airTableData.rows || !airTableData.headers) {
+		console.warn('Air table data not available');
+		return;
+	}
+
+	const table = document.getElementById('airTableDisplay');
+	if (!table) return;
+
+	// Clear existing table
+	table.innerHTML = '';
+
+	// Create table header
+	const headerRow = document.createElement('tr');
+	airTableData.headers.forEach((header, headerIndex) => {
+		const th = document.createElement('th');
+		th.textContent = header;
+		headerRow.appendChild(th);
+	});
+	table.appendChild(headerRow);
+
+	// First pass: find which column matches Nultijd for each row
+	const matchedColumns = [];
+	airTableData.rows.forEach(row => {
+		const nultijd = row[1];
+		let matched = -1;
+		for (let i = 2; i < row.length; i++) {
+			if (row[i] === nultijd) {
+				matched = i;
+				break;
+			}
+		}
+		matchedColumns.push(matched);
+	});
+
+	// Second pass: create table rows with proper borders
+	airTableData.rows.forEach((row, rowIndex) => {
+		const nultijd = row[1];
+		const tr = document.createElement('tr');
+		const currentMatchedColumn = matchedColumns[rowIndex];
+		const nextMatchedColumn = rowIndex + 1 < matchedColumns.length ? matchedColumns[rowIndex + 1] : -1;
+		
+		row.forEach((cell, cellIndex) => {
+			const td = document.createElement('td');
+			td.textContent = cell !== null && cell !== undefined ? cell : '-';
+			
+			// Highlight MDD column
+			if (cellIndex === 0) {
+				td.classList.add('mdd-column');
+			}
+			
+			// Add thick borders to matched cell (right and bottom)
+			if (cellIndex === currentMatchedColumn) {
+				td.classList.add('nultijd-match');
+				// Only add bottom border if the next row's matched column is different
+				if (nextMatchedColumn !== -1 && nextMatchedColumn === currentMatchedColumn) {
+					td.classList.add('nultijd-match-no-bottom');
+				}
+			}
+			
+			// Add bottom border for connecting line between rows when columns differ
+			// Exclude the nextMatchedColumn and currentMatchedColumn itself
+			if (cellIndex >= 2 && nextMatchedColumn !== -1 && currentMatchedColumn !== nextMatchedColumn) {
+				const minCol = Math.min(currentMatchedColumn, nextMatchedColumn);
+				const maxCol = Math.max(currentMatchedColumn, nextMatchedColumn);
+				// Apply bottom border to cells between the two matched columns, excluding both ends
+				if (cellIndex > minCol && cellIndex < maxCol) {
+					td.classList.add('nultijd-connector-bottom');
+				}
+			}
+			
+			tr.appendChild(td);
+		});
+		table.appendChild(tr);
+	});
+
+	// Highlight the current cell used for nultijd/HHG
+	highlightAirTableCell();
+}
+
+// Highlight the cell that corresponds to current nultijd row and HHG column
+function highlightAirTableCell() {
+	const table = document.getElementById('airTableDisplay');
+	if (!table || !airTableData) return;
+
+	// Get current nultijd and HHG values
+	const nultijdElement = document.getElementById('nultijd');
+	const intervalGroupElement = document.getElementById('intervalgroup');
+	
+	if (!nultijdElement || !intervalGroupElement) return;
+
+	const currentNultijd = parseInt(nultijdElement.textContent) || 0;
+	const currentGroup = intervalGroupElement.textContent || 'A';
+
+	// Remove previous highlights
+	document.querySelectorAll('#airTableDisplay td.highlighted').forEach(cell => {
+		cell.classList.remove('highlighted');
+	});
+
+	// Find and highlight the matching cell
+	// Row index: find row where Nultijd matches
+	// Column index: find column where header matches current group
+	const rows = table.querySelectorAll('tr');
+	
+	for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+		const cells = rows[rowIndex].querySelectorAll('td');
+		// Check if this row's nultijd (column 1) matches
+		const rowNultijd = parseInt(cells[1].textContent);
+		
+		if (rowNultijd === currentNultijd) {
+			// Found the matching row, now find the matching column
+			for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
+				if (airTableData.headers[colIndex] === currentGroup) {
+					if (cells[colIndex]) {
+						cells[colIndex].classList.add('highlighted');
+						console.log(`✓ Highlighted air table cell: MDD row with Nultijd=${currentNultijd}, Group=${currentGroup}`);
+					}
+					break;
+				}
+			}
+			break;
+		}
+	}
+}
+
 function updateMetrics() {
 	const calculations = getAllCalculations();
 	document.getElementById('totalTime').textContent = calculations.totalTime.toFixed(1);
-	document.getElementById('maxDepth').textContent = calculations.maxDepth.toFixed(1);
+	
+	// Update MOD stat-card: use table maxDepth if > 0, otherwise use MOD input value
+	const maxDepth = calculations.maxDepth;
+	const mddInput = document.querySelector('input[name="MOD"]');
+	if (maxDepth > 0) {
+		// Table has data, use maxDepth from table
+		document.getElementById('maxDepth').textContent = maxDepth.toFixed(1);
+	} else {
+		// Table is empty, use MOD value from input
+		const modValue = parseFloat(mddInput?.value) || 0;
+		document.getElementById('maxDepth').textContent = modValue.toFixed(1);
+	}
+	
 	document.getElementById('avgDepth').textContent = calculations.avgDepth.toFixed(1);
 	document.getElementById('totalAirConsumption').textContent = calculations.totalAirConsumption.toFixed(1);
 	
-	// Update MDD based on maximum depth
+	// Update MDD input based on maximum depth (only if table has data)
 	updateMDDFromMaxDepth();
 	
 	// Update interval group based on new total time
@@ -653,6 +900,12 @@ function updateMetrics() {
 	
 	// Check and update nultijd warning color
 	updateNultijdWarning();
+	
+	// Update EAD calculation
+	calculateEAD();
+	
+	// Update pO2 calculation
+	calculatepO2();
 }
 
 function add2Rows(){
