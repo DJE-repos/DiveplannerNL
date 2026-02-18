@@ -448,6 +448,13 @@ tr:last-child td {
     font-weight: bold;
 }
 
+#airTableDisplay th.highlighted {
+    background: linear-gradient(45deg, #667eea, #008528) !important;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
 #airTableDisplay tr:nth-child(even) {
     background: #f9f9f9;
 }
@@ -457,11 +464,12 @@ tr:last-child td {
 }
 
 #airTableDisplay td.highlighted {
-    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    background: linear-gradient(45deg, #667eea, #008528) !important;
     color: white;
     font-weight: bold;
     box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
 }
+
 
 #airTableDisplay td.mdd-column {
     background: rgba(102, 126, 234, 0.1);

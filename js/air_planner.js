@@ -835,8 +835,10 @@ function highlightAirTableCell() {
 
 	// Get current nultijd and HHG values
 	const nultijdElement = document.getElementById('nultijd');
+	const mddVal = parseInt(document.getElementById('maxDepth').textContent) ||0;
 	const intervalGroupElement = document.getElementById('intervalgroup');
 	
+	const currentMDD = Math.ceil(mddVal / 3) * 3; // Round up to nearest multiple of 3
 	if (!nultijdElement || !intervalGroupElement) return;
 
 	const currentNultijd = parseInt(nultijdElement.textContent) || 0;
@@ -856,16 +858,25 @@ function highlightAirTableCell() {
 		const cells = rows[rowIndex].querySelectorAll('td');
 		// Check if this row's nultijd (column 1) matches
 		const rowNultijd = parseInt(cells[1].textContent);
-		
-		if (rowNultijd === currentNultijd) {
+		const rowMDD = parseInt(cells[0].textContent);
+
+		if (rowMDD === currentMDD) {
 			// Found the matching row, now find the matching column
 			for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
 				if (airTableData.headers[colIndex] === currentGroup) {
 					if (cells[colIndex]) {
+						//highlight the header matching the column of the cell
+						const headers = table.querySelectorAll('th');
+						if (headers[colIndex]) {
+							headers[colIndex].classList.add('highlighted');
+						}
+						
 						cells[colIndex].classList.add('highlighted');
-						console.log(`✓ Highlighted air table cell: MDD row with Nultijd=${currentNultijd}, Group=${currentGroup}`);
+						cells[0].classList.add('highlighted'); // Also highlight MDD cell for context
+						console.log(`✓ Highlighted air table cell: MDD row with MDD=${currentMDD}, Group=${currentGroup}`);
 					}
 					break;
+					
 				}
 			}
 			break;
