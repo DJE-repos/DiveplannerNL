@@ -870,13 +870,11 @@ function highlightAirTableCell() {
 						if (headers[colIndex]) {
 							headers[colIndex].classList.add('highlighted');
 						}
-						
 						cells[colIndex].classList.add('highlighted');
 						cells[0].classList.add('highlighted'); // Also highlight MDD cell for context
 						console.log(`✓ Highlighted air table cell: MDD row with MDD=${currentMDD}, Group=${currentGroup}`);
 					}
 					break;
-					
 				}
 			}
 			break;
