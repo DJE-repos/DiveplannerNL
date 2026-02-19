@@ -12,7 +12,7 @@ async function loadAirTable() {
 		const jsonData = await response.json();
 		console.log('Raw JSON loaded:', jsonData);
 		
-		// Extract Table A from the JSON structure
+		// Extract Table A from the JSON structure 
 		if (jsonData['Table A']) {
 			airTableData = jsonData['Table A'];
 		} else {
