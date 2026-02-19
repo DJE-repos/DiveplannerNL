@@ -400,7 +400,7 @@ tr:last-child td {
 }
 
 .stat-value {
-    font-size: 1rem;
+    font-size: 1.3rem;
     font-weight: bold;
     background: linear-gradient(45deg, #667eea, #764ba2);
     -webkit-background-clip: text;
