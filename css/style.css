@@ -345,6 +345,13 @@ tr:last-child td {
     margin-bottom: 30px;
 }
 
+.stats-grid-mini {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(50px, 0.5fr));
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
 .stat-card {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 15px;
