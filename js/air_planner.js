@@ -856,17 +856,19 @@ function highlightAirTableCell() {
 	
 	for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
 		const cells = rows[rowIndex].querySelectorAll('td');
+		const headers = table.querySelectorAll('th');
 		// Check if this row's nultijd (column 1) matches
-		const rowNultijd = parseInt(cells[1].textContent);
+		//const rowNultijd = parseInt(cells[1].textContent);
 		const rowMDD = parseInt(cells[0].textContent);
 
 		if (rowMDD === currentMDD) {
 			// Found the matching row, now find the matching column
 			for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
+				headers.classList.remove('highlighted');
 				if (airTableData.headers[colIndex] === currentGroup) {
 					if (cells[colIndex]) {
 						//highlight the header matching the column of the cell
-						const headers = table.querySelectorAll('th');
+						
 						if (headers[colIndex]) {
 							headers[colIndex].classList.add('highlighted');
 						}
