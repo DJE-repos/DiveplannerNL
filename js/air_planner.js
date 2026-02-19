@@ -864,7 +864,7 @@ function highlightAirTableCell() {
 		if (rowMDD === currentMDD) {
 			// Found the matching row, now find the matching column
 			for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
-				headers.classList.remove('highlighted');
+				headers[colIndex].classList.remove('highlighted');
 				if (airTableData.headers[colIndex] === currentGroup) {
 					if (cells[colIndex]) {
 						//highlight the header matching the column of the cell
