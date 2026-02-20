@@ -462,6 +462,8 @@ function updateRemainingPressure() {
 	});
 }
 
+
+
 // Shared handler for input changes to prevent memory leaks from duplicate listeners
 function handleInputChange() {
 	updateTimeAccumulated();
@@ -832,11 +834,14 @@ function displayAirTable() {
 function highlightAirTableCell() {
 	const table = document.getElementById('airTableDisplay');
 	if (!table || !airTableData) return;
-
+	const EADVal = parseInt(document.getElementById('EquivilantAirDepth')).textContent || 0;
 	// Get current nultijd and HHG values
 	const nultijdElement = document.getElementById('nultijd');
 	const mddVal = parseInt(document.getElementById('maxDepth').textContent) ||0;
 	const intervalGroupElement = document.getElementById('intervalgroup');
+	if (mddVal!=EADVal) {
+		mddVal=EADVal;
+	}
 	
 	const currentMDD = Math.ceil(mddVal / 3) * 3; // Round up to nearest multiple of 3
 	if (!nultijdElement || !intervalGroupElement) return;
@@ -860,15 +865,15 @@ function highlightAirTableCell() {
 		// Check if this row's nultijd (column 1) matches
 		//const rowNultijd = parseInt(cells[1].textContent);
 		const rowMDD = parseInt(cells[0].textContent);
-
+		for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
+			headers[colIndex].classList.remove('highlighted');
+		}
 		if (rowMDD === currentMDD) {
 			// Found the matching row, now find the matching column
 			for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
-				headers[colIndex].classList.remove('highlighted');
 				if (airTableData.headers[colIndex] === currentGroup) {
 					if (cells[colIndex]) {
 						//highlight the header matching the column of the cell
-						
 						if (headers[colIndex]) {
 							headers[colIndex].classList.add('highlighted');
 						}
