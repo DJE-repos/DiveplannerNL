@@ -231,6 +231,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			eanxInput.addEventListener('input', calculatepO2);
 			eanxInput.addEventListener('change', calculatepO2);
 		}
+		const usingReelInput=document.querySelector('input[name="usingReel"]');
+		if(usingReelInput){
+			usingReelInput.addEventListener('change',updateMetrics);
+		}
 		
 		// Setup preset input listeners
 		PresetsAddEventListeners();
@@ -752,25 +756,41 @@ function calculatepO2() {
 function calculateDefaultConsumptionPressureCards() {
 	const bottelCapInput = document.querySelector('input[name="Flesinhoud"]');
 	const modInput = document.querySelector('input[name="MOD"]');
+	const bottlePressureInput = document.querySelector('input[name="Flesdruk"]');
 	const consumptionInput=document.querySelector('input[name="airConsumption_preset"]');
+	const usingReelInput=document.querySelector('input[name="usingReel"]');
+
 	const bottleCap=parseFloat(bottelCapInput.value) || 12;
 	const modVal=parseFloat(modInput.value) || 0;
 	const consumptionPreset=parseFloat(consumptionInput.value) || 21;
-	console.log(modVal)
+	const bottlePressureVal=parseFloat(bottlePressureInput.value) || 0;
+	//only show returnpressurereel card if usingreel is checked
+
+	console.log(766);
+	console.log(usingReelInput.checked);
+	
+
 	var backupPressure = 50;
 	if (bottleCap < 12) {
 		var backupPressure=600/bottleCap;
 	}
+
+
 	console.log('using backup pressure of ' + backupPressure + ' bar');
 	// Calculate min air pressure 
 	const ascendPressure=((((0.5*modVal)/10)+1)*(modVal/10)*consumptionPreset)/bottleCap;
 	const safetyPressure=3*1.5*consumptionPreset/bottleCap;
 	var minPressure=ascendPressure+safetyPressure+backupPressure;
-	if (minPressure < 75) minPressure=75;
 	console.log('backuppressure'+backupPressure+' bar + ascendpressure '+ascendPressure+' bar + safety pressure '+safetyPressure+' bar = minimum pressure of ' + minPressure + ' bar');
 
-
+	//outputting vlaues to stat-cards
 	document.getElementById('minPressure').textContent=Math.ceil(minPressure);
+	if (!usingReelInput.checked) {
+		document.getElementById('returnPressure').textContent= Math.ceil(minPressure +((bottlePressureVal-minPressure)/2));
+	}
+	else{
+		document.getElementById('returnPressure').textContent= Math.ceil(minPressure +((bottlePressureVal-minPressure)*2/3));
+	}
 }
 
 // Display and highlight the air table

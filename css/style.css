@@ -456,7 +456,7 @@ tr:last-child td {
 }
 
 #airTableDisplay th.highlighted {
-    background: linear-gradient(45deg, #667eea, #008528) !important;
+    background: linear-gradient(45deg, white, #008528) !important;
     color: white;
     font-weight: bold;
     box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
@@ -471,7 +471,7 @@ tr:last-child td {
 }
 
 #airTableDisplay td.highlighted {
-    background: linear-gradient(45deg, #667eea, #008528) !important;
+    background: linear-gradient(45deg, white, #008528) !important;
     color: white;
     font-weight: bold;
     box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
