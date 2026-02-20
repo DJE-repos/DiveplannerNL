@@ -749,6 +749,30 @@ function calculatepO2() {
 	}
 }
 
+function calculateDefaultConsumptionPressureCards() {
+	const bottelCapInput = document.querySelector('input[name="Flesinhoud"]');
+	const modInput = document.querySelector('input[name="MOD"]');
+	const consumptionInput=document.querySelector('input[name="airConsumption_preset"]');
+	const bottleCap=parseFloat(bottelCapInput.value) || 12;
+	const modVal=parseFloat(modInput.value) || 0;
+	const consumptionPreset=parseFloat(consumptionInput.value) || 21;
+	console.log(modVal)
+	var backupPressure = 50;
+	if (bottleCap < 12) {
+		var backupPressure=600/bottleCap;
+	}
+	console.log('using backup pressure of ' + backupPressure + ' bar');
+	// Calculate min air pressure 
+	const ascendPressure=((((0.5*modVal)/10)+1)*(modVal/10)*consumptionPreset)/bottleCap;
+	const safetyPressure=3*1.5*consumptionPreset/bottleCap;
+	var minPressure=ascendPressure+safetyPressure+backupPressure;
+	if (minPressure < 75) minPressure=75;
+	console.log('backuppressure'+backupPressure+' bar + ascendpressure '+ascendPressure+' bar + safety pressure '+safetyPressure+' bar = minimum pressure of ' + minPressure + ' bar');
+
+
+	document.getElementById('minPressure').textContent=Math.ceil(minPressure);
+}
+
 // Display and highlight the air table
 function displayAirTable() {
 	if (!airTableData || !airTableData.rows || !airTableData.headers) {
@@ -927,6 +951,9 @@ function updateMetrics() {
 	
 	// Update pO2 calculation
 	calculatepO2();
+
+	// Update bottlepressures calculations
+	calculateDefaultConsumptionPressureCards();
 }
 
 function add2Rows(){
