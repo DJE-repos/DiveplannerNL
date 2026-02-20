@@ -834,19 +834,23 @@ function displayAirTable() {
 function highlightAirTableCell() {
 	const table = document.getElementById('airTableDisplay');
 	if (!table || !airTableData) return;
-	const EADVal = parseInt(document.getElementById('EquivilantAirDepth')).textContent || 0;
+	const EADVal = parseInt(document.getElementById('EquivilantAirDepth').textContent) || 0;
 	// Get current nultijd and HHG values
 	const nultijdElement = document.getElementById('nultijd');
 	const mddVal = parseInt(document.getElementById('maxDepth').textContent) ||0;
 	const intervalGroupElement = document.getElementById('intervalgroup');
-	if (mddVal!=EADVal) {
-		mddVal=EADVal;
+	var currentMDD = Math.ceil(mddVal / 3) * 3; // Round up to nearest multiple of 3
+
+	console.log(`EAD:${EADVal}, MDD:${mddVal}`);
+
+	if (EADVal>0) {
+		var currentMDD = Math.ceil(EADVal / 3) * 3;
 	}
+	console.log(`Using MDD: ${currentMDD} for air table highlighting`);
 	
-	const currentMDD = Math.ceil(mddVal / 3) * 3; // Round up to nearest multiple of 3
 	if (!nultijdElement || !intervalGroupElement) return;
 
-	const currentNultijd = parseInt(nultijdElement.textContent) || 0;
+	//const currentNultijd = parseInt(nultijdElement.textContent) || 0;
 	const currentGroup = intervalGroupElement.textContent || 'A';
 
 	// Remove previous highlights
@@ -868,6 +872,7 @@ function highlightAirTableCell() {
 		for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
 			headers[colIndex].classList.remove('highlighted');
 		}
+
 		if (rowMDD === currentMDD) {
 			// Found the matching row, now find the matching column
 			for (let colIndex = 0; colIndex < airTableData.headers.length; colIndex++) {
