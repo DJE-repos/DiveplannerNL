@@ -709,6 +709,7 @@ function calculateEAD() {
 		updateNultijdAndGroup();
 	} else {
 		// Hide EAD card if EANx <= 21
+		document.body.style.background = 'linear-gradient(135deg, #dde3fd 50%, #0617da 100%)';
 		if (eadCard) {
 			eadCard.style.display = 'none';
 		}
