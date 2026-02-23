@@ -694,7 +694,7 @@ function calculateEAD() {
 	
 	// Only show EAD card if EANx > 21
 	if (eanx > 21) {
-		document.body.style.background = 'linear-gradient(135deg, #dde3fd 50%, #06da34 100%)';
+		document.body.style.background = 'linear-gradient(135deg, #ebffed 50%, #06da34 100%)';
 		if (eadCard) {
 			eadCard.style.display = 'flex';
 		}
