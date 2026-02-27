@@ -1188,8 +1188,8 @@ function exportToJSON() {
 
 	// Create and download the JSON file
 	const dataStr = JSON.stringify(exportData, null, 2);
-	const link = document.createElement('a');
-	// build filename from parameters: locatie-dd-mmm-hh-mm-kenteringtype
+	
+	// Build filename from parameters: locatie-dd-mmm-hh-mm-kenteringtype-duiker
 	const locatie = params.duiklocatie || 'duik';
 	let datePart = '';
 	if (params.datum) {
@@ -1213,16 +1213,43 @@ function exportToJSON() {
 	let filename = `${locatie}-${datePart}-${kenteringPart}-${typePart}-${duikerPart}`;
 	// sanitize: replace spaces and illegal chars with underscores
 	filename = filename.replace(/[^a-zA-Z0-9\-_.]/g, '_');
-	link.download = `${filename}.json`;
+	const fullFilename = `${filename}.json`;
 
-	// Use blob URLs as they work better with the download attribute across all browsers including iOS
-	const dataBlob = new Blob([dataStr], { type: 'application/json' });
+	// Try using Web Share API first for mobile (most reliable on Android)
+	if (navigator.share && /Android|iPhone|iPad|iPod/.test(navigator.userAgent)) {
+		const dataBlob = new Blob([dataStr], { type: 'application/json' });
+		const file = new File([dataBlob], fullFilename, { type: 'application/json' });
+		navigator.share({
+			files: [file],
+			title: 'Duikplanner Export'
+		}).catch(err => {
+			// Fallback if share API fails
+			downloadFile(dataStr, fullFilename);
+		});
+	} else {
+		// Standard download for desktop and browsers without share API
+		downloadFile(dataStr, fullFilename);
+	}
+}
+
+// Helper function to handle file download
+function downloadFile(dataStr, filename) {
+	const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
+	const link = document.createElement('a');
 	const url = URL.createObjectURL(dataBlob);
-	link.href = url;
+	
+	link.setAttribute('href', url);
+	link.setAttribute('download', filename);
+	link.style.visibility = 'hidden';
+	
 	document.body.appendChild(link);
 	link.click();
-	document.body.removeChild(link);
-	URL.revokeObjectURL(url);
+	
+	// Clean up
+	setTimeout(() => {
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}, 100);
 }
 
 // Import table data and parameters from JSON
