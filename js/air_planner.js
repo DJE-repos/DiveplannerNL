@@ -1215,24 +1215,14 @@ function exportToJSON() {
 	filename = filename.replace(/[^a-zA-Z0-9\-_.]/g, '_');
 	link.download = `${filename}.json`;
 
-	// On some mobile browsers (notably iOS Safari) the download attribute is ignored for blob URLs
-	// Use a data: URL fallback so the filename is respected when possible
-	const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent) && !window.MSStream;
-	if (isIOS) {
-		const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-		link.href = dataUrl;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-	} else {
-		const dataBlob = new Blob([dataStr], { type: 'application/json' });
-		const url = URL.createObjectURL(dataBlob);
-		link.href = url;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
-	}
+	// Use blob URLs as they work better with the download attribute across all browsers including iOS
+	const dataBlob = new Blob([dataStr], { type: 'application/json' });
+	const url = URL.createObjectURL(dataBlob);
+	link.href = url;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	URL.revokeObjectURL(url);
 }
 
 // Import table data and parameters from JSON
