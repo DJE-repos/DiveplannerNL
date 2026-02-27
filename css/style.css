@@ -291,6 +291,11 @@ tr:last-child td {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
+.table-content-wrapper {
+    display: block;
+    width: 100%;
+}
+
 .settings-section {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 15px;
@@ -332,6 +337,15 @@ tr:last-child td {
     font-size: 12px;
     transition: border-color 0.3s ease;
     width: 80px;
+}
+
+/* make specific fields wider */
+.settings-row input[name="duiklocatie"] {
+    width: 200px;
+}
+.settings-row input[name="datum"],
+.settings-row input[name="kentering"] {
+    width: 140px;
 }
 
 .input-group input:focus {
@@ -435,6 +449,8 @@ tr:last-child td {
 .air-table-wrapper {
     overflow-x: auto;
     border-radius: 10px;
+    display: block;
+    width: 100%;
 }
 
 #airTableDisplay {
@@ -505,6 +521,10 @@ tr:last-child td {
 #airTableDisplay td.nultijd-connector-bottom {
     border-bottom: 3px solid #667eea;
 }
+
+/* Print Styles */
+
+
 
 @keyframes fadeOut {
     from {

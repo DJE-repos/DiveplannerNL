@@ -251,6 +251,27 @@ document.addEventListener('DOMContentLoaded', function() {
 		calculateEAD();
 		calculatepO2();
 		
+
+		// Setup JSON export button
+		const jsonExportBtn = document.getElementById('jsonExportBtn');
+		if (jsonExportBtn) {
+			jsonExportBtn.addEventListener('click', exportToJSON);
+		}
+
+		// Setup JSON import button
+		const jsonImportBtn = document.getElementById('jsonImportBtn');
+		if (jsonImportBtn) {
+			jsonImportBtn.addEventListener('click', () => {
+				document.getElementById('jsonFileInput').click();
+			});
+		}
+
+		// Setup file input for JSON import
+		const jsonFileInput = document.getElementById('jsonFileInput');
+		if (jsonFileInput) {
+			jsonFileInput.addEventListener('change', handleJSONImport);
+		}
+		
 		console.log('Initialization complete');
 	});
 });
@@ -1126,6 +1147,161 @@ function PresetsAddEventListeners(){
 	});
 	
 	presetsListenersSetup = true;
+}
+
+
+// Export table data and parameters to JSON
+function exportToJSON() {
+	// Collect all parameters
+	const params = {
+		duiklocatie: document.querySelector('input[name="duiklocatie"]').value,
+		datum: document.querySelector('input[name="datum"]').value,
+		kentering: document.querySelector('input[name="kentering"]').value,
+		type: document.querySelector('select[name="type"]').value,
+		airConsumption_preset: document.querySelector('input[name="airConsumption_preset"]').value,
+		Flesinhoud: document.querySelector('input[name="Flesinhoud"]').value,
+		Flesdruk: document.querySelector('input[name="Flesdruk"]').value,
+		MOD: document.querySelector('input[name="MOD"]').value,
+		EANx: document.querySelector('input[name="EANx"]').value,
+		usingReel: document.querySelector('input[name="usingReel"]').checked
+	};
+
+	// Collect all table rows
+	const tableRows = [];
+	document.querySelectorAll('#tableBody tr').forEach(row => {
+		const rowData = {};
+		row.querySelectorAll('input[type="number"]').forEach((input, index) => {
+			const fieldName = input.name;
+			rowData[fieldName] = input.value;
+		});
+		tableRows.push(rowData);
+	});
+
+	// Create the export object
+	const exportData = {
+		exportDate: new Date().toISOString(),
+		version: '1.0',
+		parameters: params,
+		tableRows: tableRows
+	};
+
+	// Create and download the JSON file
+	const dataStr = JSON.stringify(exportData, null, 2);
+	const dataBlob = new Blob([dataStr], { type: 'application/json' });
+	const url = URL.createObjectURL(dataBlob);
+	const link = document.createElement('a');
+	link.href = url;
+	// build filename from parameters: locatie-dd-mmm-hh-mm-kenteringtype
+	const locatie = params.duiklocatie || 'duik';
+	let datePart = '';
+	if (params.datum) {
+		const parts = params.datum.split('-');
+		if (parts.length === 3) {
+			const year = parts[0];
+			const month = parseInt(parts[1], 10) - 1;
+			const day = parts[2];
+			const months = ['jan','feb','mar','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+			const mname = months[month] || parts[1];
+			datePart = `${day}-${mname}`;
+		} else {
+			datePart = params.datum;
+		}
+	}
+	let kenteringPart = params.kentering || '';
+	// convert hh:mm to hh.mm (use dot separator as requested)
+	kenteringPart = kenteringPart.replace(/:/g, '.');
+	const typePart = params.type || '';
+	let filename = `${locatie}-${datePart}-${kenteringPart}-${typePart}`;
+	// sanitize: replace spaces and illegal chars with underscores
+	filename = filename.replace(/[^a-zA-Z0-9\-_.]/g, '_');
+	link.download = `${filename}.json`;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	URL.revokeObjectURL(url);
+}
+
+// Import table data and parameters from JSON
+function handleJSONImport(event) {
+	const file = event.target.files[0];
+	if (!file) return;
+
+	const reader = new FileReader();
+	reader.onload = function(e) {
+		try {
+			const importData = JSON.parse(e.target.result);
+
+			// Validate the import data
+			if (!importData.parameters || !importData.tableRows) {
+				alert('Invalid file format. Please use a file exported from Duikplanner.');
+				return;
+			}
+
+			// Import parameters
+			const params = importData.parameters;
+			document.querySelector('input[name="duiklocatie"]').value = params.duiklocatie || '';
+			document.querySelector('input[name="datum"]').value = params.datum || '';
+			document.querySelector('input[name="kentering"]').value = params.kentering || '';
+			document.querySelector('select[name="type"]').value = params.type || 'LW';
+			document.querySelector('input[name="airConsumption_preset"]').value = params.airConsumption_preset || '21';
+			document.querySelector('input[name="Flesinhoud"]').value = params.Flesinhoud || '10';
+			document.querySelector('input[name="Flesdruk"]').value = params.Flesdruk || '280';
+			document.querySelector('input[name="MOD"]').value = params.MOD || '0';
+			document.querySelector('input[name="EANx"]').value = params.EANx || '21';
+			document.querySelector('input[name="usingReel"]').checked = params.usingReel || false;
+
+			// Clear existing table rows (except the first one)
+			const tableBody = document.getElementById('tableBody');
+			const rows = tableBody.querySelectorAll('tr');
+			for (let i = rows.length - 1; i > 0; i--) {
+				rows[i].remove();
+			}
+
+			// Import table rows
+			const tableRows = importData.tableRows;
+			if (tableRows.length > 0) {
+				// Update the first row with the first imported data
+				const firstRow = tableBody.querySelector('tr');
+				const firstRowData = tableRows[0];
+				firstRow.querySelectorAll('input[type="number"]').forEach(input => {
+					if (firstRowData[input.name] !== undefined) {
+						input.value = firstRowData[input.name];
+					}
+				});
+
+				// Add additional rows if needed
+				for (let i = 1; i < tableRows.length; i++) {
+					addRow();
+					const newRow = tableBody.querySelector('tr:last-child');
+					const rowData = tableRows[i];
+					newRow.querySelectorAll('input[type="number"]').forEach(input => {
+						if (rowData[input.name] !== undefined) {
+							input.value = rowData[input.name];
+						}
+					});
+				}
+			}
+
+			// Trigger updates
+			handleInputChange();
+			updateMetrics();
+			updateChart();
+			updateAirConsumption();
+			updateRemainingPressure();
+			updateNultijdAndGroup();
+			calculateEAD();
+			calculatepO2();
+
+			alert('Data imported successfully!');
+		} catch (error) {
+			console.error('Error importing JSON:', error);
+			alert('Error importing file: ' + error.message);
+		}
+	};
+	reader.readAsText(file);
+
+	// Reset the file input so the same file can be imported again
+	event.target.value = '';
 }
 
 // Air table lookup complete

@@ -9,9 +9,39 @@
 </head>
 <body>
     <div>
-        <h1>🤿 Duikplanner</h1>
+        <h1>🤿 Duikplanner
+                        <button id="jsonImportBtn" style="float: right; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px;">📂 Import JSON</button>
+            <button id="jsonExportBtn" style="float: right; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold;">💾 Export JSON</button>
+            <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+        </h1>
 		<div class="settings-section">
-            <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'grid' : 'none';">
+            <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='grid';}">
+                📝 Duik info <span class="collapse-arrow">▼</span> 
+            </h3>
+            <div class="settings-row">
+                <div class="input-group">
+                    <label for="location">Duiklocatie</label>
+                    <input type="text" name="duiklocatie" value="">
+                </div>
+                <div class="input-group">
+                    <label for="datum">Datum</label>
+                    <input type="date" name="datum" value="">
+                </div>
+                <div class="input-group">
+                    <label for="kentering">Kentering</label>
+                    <input type="time" name="kentering" value="">
+                </div>
+                <div class="input-group">
+                    <label for="type">Type</label>
+                    <select name="type">
+                        <option value="LW">LW</option>
+                        <option value="HW">HW</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='grid';}">
                 ⚙️ Duik parameters <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row">
@@ -60,13 +90,13 @@
             </div>
         </div>
         <div class="chart-container">
-            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
+            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='block';}">
                 📈 Duikprofiel <span class="collapse-arrow">▼</span> 
             </h2>
             <canvas id="depthChart"></canvas>
         </div>
         <div class="chart-container">
-            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
+            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='block';}">
                 𝄜 Duiktabel <span class="collapse-arrow">▼</span>
             </h2>
             <div class="table-content-wrapper">
@@ -140,7 +170,7 @@
             
         </div>
         <div class="air-table-container">
-            <h2 class="collapsible collapsed" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
+            <h2 class="collapsible collapsed" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='block';}">
                 📊 Duiktabel (Table A) <span class="collapse-arrow">▼</span>
             </h2>
             <div class="air-table-wrapper" style="display: none;">
