@@ -314,9 +314,43 @@ tr:last-child td {
 .settings-row {
     display: grid;
     align-items: center;
-	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    
-    flex-wrap: wrap;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+/* Compact layout for numeric dive parameters */
+.parameters-row {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 8px;
+}
+.parameters-row .input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+.parameters-row .input-group label {
+    font-size: 0.8rem;
+    color: #000000;
+    margin-bottom: 6px;
+}
+.parameters-row input {
+    padding: 8px 10px;
+    font-size: 12px;
+    max-width: 120px;
+    width: 100%;
+    box-sizing: border-box;
+    color: #000000;
+}
+.parameters-row input[type="number"] {
+    text-align: right;
+}
+.parameters-row select {
+    max-width: 120px;
+    color: #000000;
+}
+.parameters-row input[type="checkbox"] {
+    width: auto;
+    transform: scale(1.05);
 }
 
 .input-group {
@@ -336,16 +370,80 @@ tr:last-child td {
     border-radius: 8px;
     font-size: 12px;
     transition: border-color 0.3s ease;
-    width: 80px;
+    width: 100%;
+    min-width: 0;
 }
 
 /* make specific fields wider */
 .settings-row input[name="duiklocatie"] {
-    width: 200px;
+    width: 100%;
+    max-width: 420px;
 }
 .settings-row input[name="datum"],
 .settings-row input[name="kentering"] {
-    width: 140px;
+    width: 100%;
+    max-width: 180px;
+}
+
+/* Header buttons and responsive behavior */
+h1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+h1 button {
+    float: none !important;
+    margin: 0 6px;
+}
+
+.header-controls {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 8px;
+    align-items: center;
+    justify-items: end;
+}
+
+.header-btn {
+    padding: 8px 12px;
+    background: linear-gradient(180deg,#2b7be9,#1b5fc4);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.header-btn svg, .header-btn img {
+    width: 16px;
+    height: 16px;
+}
+
+@media (max-width: 720px) {
+    /* allow items to wrap naturally without becoming full-width single column */
+    .settings-row {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+    .parameters-row {
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    }
+    .settings-row input[name="duiklocatie"],
+    .settings-row input[name="datum"],
+    .settings-row input[name="kentering"] {
+        max-width: 100%;
+        width: 100%;
+    }
+    h1 {
+        align-items: flex-start;
+    }
+    h1 button {
+        width: auto;
+    }
 }
 
 .input-group input:focus {

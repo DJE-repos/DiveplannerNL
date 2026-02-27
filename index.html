@@ -9,16 +9,23 @@
 </head>
 <body>
     <div>
-        <h1>🤿 Duikplanner
-                        <button id="jsonImportBtn" style="float: right; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px;">📂 Import JSON</button>
-            <button id="jsonExportBtn" style="float: right; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold;">💾 Export JSON</button>
-            <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+        <h1>
+            <span class="title">🤿 Duikplanner</span>
+            <div class="header-controls">
+                <button id="jsonImportBtn" class="header-btn">📂 import</button>
+                <button id="jsonExportBtn" class="header-btn">💾 export</button>
+                <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+            </div>
         </h1>
 		<div class="settings-section">
             <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='grid';}">
                 📝 Duik info <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row">
+                <div class="input-group">
+                    <label for="duiker">Duiker</label>
+                    <input type="text" name="duiker" value="">
+                </div>
                 <div class="input-group">
                     <label for="location">Duiklocatie</label>
                     <input type="text" name="duiklocatie" value="">
@@ -44,7 +51,7 @@
             <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='grid';}">
                 ⚙️ Duik parameters <span class="collapse-arrow">▼</span> 
             </h3>
-            <div class="settings-row">
+            <div class="settings-row parameters-row">
                 <div class="input-group">
                     <label for="airConsumption">Verbruik (l/min)</label>
                     <input type="number" name="airConsumption_preset" value="21" step="0.1" min="0">

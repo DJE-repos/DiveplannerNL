@@ -1154,6 +1154,7 @@ function PresetsAddEventListeners(){
 function exportToJSON() {
 	// Collect all parameters
 	const params = {
+		duiker: document.querySelector('input[name="duiker"]').value,
 		duiklocatie: document.querySelector('input[name="duiklocatie"]').value,
 		datum: document.querySelector('input[name="datum"]').value,
 		kentering: document.querySelector('input[name="kentering"]').value,
@@ -1187,10 +1188,7 @@ function exportToJSON() {
 
 	// Create and download the JSON file
 	const dataStr = JSON.stringify(exportData, null, 2);
-	const dataBlob = new Blob([dataStr], { type: 'application/json' });
-	const url = URL.createObjectURL(dataBlob);
 	const link = document.createElement('a');
-	link.href = url;
 	// build filename from parameters: locatie-dd-mmm-hh-mm-kenteringtype
 	const locatie = params.duiklocatie || 'duik';
 	let datePart = '';
@@ -1211,14 +1209,30 @@ function exportToJSON() {
 	// convert hh:mm to hh.mm (use dot separator as requested)
 	kenteringPart = kenteringPart.replace(/:/g, '.');
 	const typePart = params.type || '';
-	let filename = `${locatie}-${datePart}-${kenteringPart}-${typePart}`;
+	const duikerPart = params.duiker || '';
+	let filename = `${locatie}-${datePart}-${kenteringPart}-${typePart}-${duikerPart}`;
 	// sanitize: replace spaces and illegal chars with underscores
 	filename = filename.replace(/[^a-zA-Z0-9\-_.]/g, '_');
 	link.download = `${filename}.json`;
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
-	URL.revokeObjectURL(url);
+
+	// On some mobile browsers (notably iOS Safari) the download attribute is ignored for blob URLs
+	// Use a data: URL fallback so the filename is respected when possible
+	const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent) && !window.MSStream;
+	if (isIOS) {
+		const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+		link.href = dataUrl;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	} else {
+		const dataBlob = new Blob([dataStr], { type: 'application/json' });
+		const url = URL.createObjectURL(dataBlob);
+		link.href = url;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}
 }
 
 // Import table data and parameters from JSON
@@ -1239,6 +1253,7 @@ function handleJSONImport(event) {
 
 			// Import parameters
 			const params = importData.parameters;
+			document.querySelector('input[name="duiker"]').value = params.duiker || '';
 			document.querySelector('input[name="duiklocatie"]').value = params.duiklocatie || '';
 			document.querySelector('input[name="datum"]').value = params.datum || '';
 			document.querySelector('input[name="kentering"]').value = params.kentering || '';
