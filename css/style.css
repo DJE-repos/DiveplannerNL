@@ -353,6 +353,11 @@ tr:last-child td {
     transform: scale(1.05);
 }
 
+/* Make multiselect span 2 columns in parameters row */
+.parameters-row .input-group:has(.multiselect) {
+    grid-column: span 2;
+}
+
 .input-group {
     display: flex;
     flex-direction: column;
@@ -372,6 +377,117 @@ tr:last-child td {
     transition: border-color 0.3s ease;
     width: 100%;
     min-width: 0;
+}
+
+.input-group select {
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 12px;
+    transition: border-color 0.3s ease;
+    width: 100%;
+    min-width: 0;
+}
+
+.input-group select[multiple] {
+    height: 120px; /* Adjust height for multiple selections */
+}
+
+.multiselect {
+    position: relative;
+    width: 100%;
+}
+
+.multiselect-header {
+    padding: 8px 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.multiselect-header::after {
+    content: '▼';
+    font-size: 10px;
+    transition: transform 0.3s;
+}
+
+.multiselect.open .multiselect-header::after {
+    transform: rotate(180deg);
+}
+
+.multiselect-options {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.multiselect.open .multiselect-options {
+    display: block;
+}
+
+.multiselect-options label {
+    display: block;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.multiselect-options label:last-child {
+    border-bottom: none;
+}
+
+.multiselect-options label:hover {
+    background: #f9f9f9;
+}
+
+.multiselect-options input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    .multiselect-options {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        max-height: 150px;
+    }
+    
+    .multiselect-header {
+        font-size: 14px;
+        padding: 8px 10px;
+    }
+    
+    .multiselect-options label {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .parameters-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .parameters-row .input-group {
+        max-width: none;
+    }
 }
 
 /* make specific fields wider */

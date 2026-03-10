@@ -753,28 +753,95 @@ function calculatepO2() {
 	const eanx = parseFloat(eanxInput.value) || 21;
 	const mod = parseFloat(modInput.value) || 0;
 	
+	// Get selected risk factors from checkboxes
+	let selectedCount = 0;
+	const checkboxes = document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]');
+	selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+	
+	// Calculate adjusted limits: each factor lowers limits by 0.05
+	const baseLowerLimit = 1.4;
+	const baseCriticalLimit = 1.6;
+	const adjustment = selectedCount * 0.05;
+	const lowerLimit = baseLowerLimit - adjustment;
+	const criticalLimit = baseCriticalLimit - adjustment;
+	
+	// Display the adjusted lower limit in the label
+	const label = document.getElementById('riskFactorsLabel');
+	if (label) {
+		label.textContent = `Risicofactoren (Lower: ${lowerLimit.toFixed(2)})`;
+	}
+	
 	// Calculate pO2 using the formula: pO2=(EANx/100)*(MOD/10+1)
 	const pO2 = (eanx / 100) * (mod / 10 + 1);
 	const pO2Rounded = pO2.toFixed(2);
 	pO2Element.textContent = pO2Rounded;
 	console.log(`✓ Updated pO2 to: ${pO2Rounded} (EANx: ${eanx}%, MOD: ${mod}m)`);
 	
-	// Apply warning styling based on pO2 value
+	// Apply warning styling based on adjusted pO2 limits
 	if (pO2Card) {
 		// Remove both warning classes first
 		pO2Card.classList.remove('warning', 'warning-severe');
 		
-		if (pO2 >= 1.6) {
-			// Severe warning (red) for pO2 >= 1.6
+		if (pO2 >= criticalLimit) {
+			// Severe warning (red) for pO2 >= criticalLimit
 			pO2Card.classList.add('warning-severe');
-			console.log(`⚠️ SEVERE WARNING: pO2 (${pO2Rounded}) is >= 1.6`);
-		} else if (pO2 > 1.4) {
-			// Warning (orange) for pO2 > 1.4 but < 1.6
+			console.log(`⚠️ SEVERE WARNING: pO2 (${pO2Rounded}) is >= ${criticalLimit.toFixed(2)}`);
+		} else if (pO2 > lowerLimit) {
+			// Warning (orange) for pO2 > lowerLimit but < criticalLimit
 			pO2Card.classList.add('warning');
-			console.log(`⚠️ WARNING: pO2 (${pO2Rounded}) exceeds 1.4`);
+			console.log(`⚠️ WARNING: pO2 (${pO2Rounded}) exceeds ${lowerLimit.toFixed(2)}`);
+		}
+	}
+	
+	// Show/hide MOD limit card
+	const modLimitCard = document.getElementById('modLimitCard');
+	const modLimitElement = document.getElementById('modLimit');
+	if (modLimitCard && modLimitElement) {
+		if (lowerLimit < 1.4 || eanx > 21) {
+			// Calculate MOD limit: [(lowerLimit / (eanx/100)) - 1] * 10
+			const modLimit = ((lowerLimit / (eanx / 100)) - 1) * 10;
+			modLimitElement.textContent = modLimit.toFixed(1);
+			modLimitCard.style.display = 'flex';
+		} else {
+			modLimitCard.style.display = 'none';
 		}
 	}
 }
+
+function toggleRiskFactorsDropdown() {
+    const multiselect = document.getElementById('riskFactorsMultiselect');
+    multiselect.classList.toggle('open');
+}
+
+function updateRiskFactorsSelection() {
+    const checkboxes = document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]');
+    const header = document.querySelector('.multiselect-header');
+    const selected = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        header.textContent = 'Geen selectie';
+    } else if (selected.length === 1) {
+        header.textContent = selected[0];
+    } else {
+        header.textContent = `${selected.length} geselecteerd`;
+    }
+    
+    // Close dropdown after selection on mobile
+    if (window.innerWidth <= 768) {
+        document.getElementById('riskFactorsMultiselect').classList.remove('open');
+    }
+    
+    // Recalculate pO2 (which will update the label)
+    calculatepO2();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const multiselect = document.getElementById('riskFactorsMultiselect');
+    if (!multiselect.contains(event.target)) {
+        multiselect.classList.remove('open');
+    }
+});
 
 function calculateDefaultConsumptionPressureCards() {
 	const bottelCapInput = document.querySelector('input[name="Flesinhoud"]');
@@ -1164,8 +1231,17 @@ function exportToJSON() {
 		Flesdruk: document.querySelector('input[name="Flesdruk"]').value,
 		MOD: document.querySelector('input[name="MOD"]').value,
 		EANx: document.querySelector('input[name="EANx"]').value,
-		usingReel: document.querySelector('input[name="usingReel"]').checked
+		usingReel: document.querySelector('input[name="usingReel"]').checked,
+		riskFactors: []
 	};
+
+	// Collect selected risk factors
+	const riskCheckboxes = document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]');
+	riskCheckboxes.forEach(checkbox => {
+		if (checkbox.checked) {
+			params.riskFactors.push(checkbox.value);
+		}
+	});
 
 	// Collect all table rows
 	const tableRows = [];
@@ -1281,6 +1357,14 @@ function handleJSONImport(event) {
 			document.querySelector('input[name="MOD"]').value = params.MOD || '0';
 			document.querySelector('input[name="EANx"]').value = params.EANx || '21';
 			document.querySelector('input[name="usingReel"]').checked = params.usingReel || false;
+
+			// Import risk factors
+			const riskCheckboxes = document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]');
+			riskCheckboxes.forEach(checkbox => {
+				checkbox.checked = params.riskFactors && params.riskFactors.includes(checkbox.value);
+			});
+			// Update the multiselect display
+			updateRiskFactorsSelection();
 
 			// Clear existing table rows (except the first one)
 			const tableBody = document.getElementById('tableBody');

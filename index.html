@@ -73,6 +73,22 @@
 					<input type="number" name="EANx" value="21" step="1" min="21">
                 </div>
                 <div class="input-group">
+                    <label id="riskFactorsLabel">Risicofactoren (Lower: 1.4)</label>
+                    <div class="multiselect" id="riskFactorsMultiselect">
+                        <div class="multiselect-header" onclick="toggleRiskFactorsDropdown()">Geen selectie</div>
+                        <div class="multiselect-options">
+                            <label><input type="checkbox" value="BMI" onchange="updateRiskFactorsSelection()"> BMI</label>
+                            <label><input type="checkbox" value="Conditie" onchange="updateRiskFactorsSelection()"> Conditie</label>
+                            <label><input type="checkbox" value="Koud water" onchange="updateRiskFactorsSelection()"> Koud water</label>
+                            <label><input type="checkbox" value="Stroming" onchange="updateRiskFactorsSelection()"> Stroming</label>
+                            <label><input type="checkbox" value="Instructie" onchange="updateRiskFactorsSelection()"> Instructie</label>
+                            <label><input type="checkbox" value="Nacht" onchange="updateRiskFactorsSelection()"> Nacht</label>
+                            <label><input type="checkbox" value="iets nieuws" onchange="updateRiskFactorsSelection()"> iets nieuws</label>
+                            <label><input type="checkbox" value="overig" onchange="updateRiskFactorsSelection()"> overig</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group">
                     <label for="usingReel">Gebruik wrakreel</label>
                     <input type="checkbox" name="usingReel">
 				</div>
@@ -94,6 +110,10 @@
             <div class="stat-card">
                 <div class="stat-value" id="pO2">0</div>
                 <div class="stat-label">pO₂ (%)</div>
+            </div>
+            <div class="stat-card" id="modLimitCard" style="display: none;">
+                <div class="stat-value" id="modLimit">0</div>
+                <div class="stat-label">MOD limit (m)</div>
             </div>
         </div>
         <div class="chart-container">
