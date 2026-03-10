@@ -272,6 +272,12 @@ document.addEventListener('DOMContentLoaded', function() {
 			jsonFileInput.addEventListener('change', handleJSONImport);
 		}
 		
+		// Setup PDF export button
+		const pdfExportBtn = document.getElementById('pdfExportBtn');
+		if (pdfExportBtn) {
+			pdfExportBtn.addEventListener('click', exportToPDF);
+		}
+		
 		console.log('Initialization complete');
 	});
 });
@@ -1332,6 +1338,251 @@ function downloadFile(dataStr, filename) {
 		document.body.removeChild(link);
 		URL.revokeObjectURL(url);
 	}, 100);
+}
+
+// Export current view to PDF
+async function exportToPDF() {
+	try {
+		const { jsPDF } = window.jspdf;
+		const pdf = new jsPDF('p', 'mm', 'a4');
+		
+		// PDF dimensions
+		const pageWidth = pdf.internal.pageSize.getWidth();
+		const pageHeight = pdf.internal.pageSize.getHeight();
+		let yPosition = 20;
+		
+		// Add title
+		pdf.setFontSize(20);
+		pdf.text('Duikplanner Rapport', pageWidth / 2, yPosition, { align: 'center' });
+		yPosition += 20;
+		
+		// Create two columns for parameters and statistics
+		const leftColumnX = 20;
+		const rightColumnX = pageWidth / 2 + 10;
+		const columnWidth = pageWidth / 2 - 15;
+		let leftY = yPosition;
+		let rightY = yPosition;
+		
+		// Get form data
+		const params = {
+			duiker: document.querySelector('input[name="duiker"]').value,
+			duiklocatie: document.querySelector('input[name="duiklocatie"]').value,
+			datum: document.querySelector('input[name="datum"]').value,
+			kentering: document.querySelector('input[name="kentering"]').value,
+			type: document.querySelector('select[name="type"]').value,
+			airConsumption_preset: document.querySelector('input[name="airConsumption_preset"]').value,
+			Flesinhoud: document.querySelector('input[name="Flesinhoud"]').value,
+			Flesdruk: document.querySelector('input[name="Flesdruk"]').value,
+			MOD: document.querySelector('input[name="MOD"]').value,
+			EANx: document.querySelector('input[name="EANx"]').value
+		};
+		
+		// Left column: Dive Parameters
+		pdf.setFontSize(14);
+		pdf.text('Duik Parameters:', leftColumnX, leftY);
+		leftY += 8;
+		
+		pdf.setFontSize(10);
+		const paramLines = [
+			`Duiker: ${params.duiker || 'Niet ingevuld'}`,
+			`Locatie: ${params.duiklocatie || 'Niet ingevuld'}`,
+			`Datum: ${params.datum || 'Niet ingevuld'}`,
+			`Kentering: ${params.kentering || 'Niet ingevuld'}`,
+			`Type: ${params.type || 'LW'}`,
+			`Verbruik (l/min): ${params.airConsumption_preset || '21'}`,
+			`Flesinhoud (l): ${params.Flesinhoud || '10'}`,
+			`Flesdruk (bar): ${params.Flesdruk || '280'}`,
+			`MOD (m): ${params.MOD || '0'}`,
+			`EANx (%): ${params.EANx || '21'}`
+		];
+		
+		paramLines.forEach(line => {
+			pdf.text(line, leftColumnX + 5, leftY);
+			leftY += 5;
+		});
+		
+		// Add risk factors to parameters column if any
+		const riskFactors = [];
+		document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]:checked').forEach(cb => {
+			riskFactors.push(cb.value);
+		});
+		
+		if (riskFactors.length > 0) {
+			leftY += 5;
+			pdf.setFontSize(12);
+			pdf.text('Risicofactoren:', leftColumnX, leftY);
+			leftY += 6;
+			
+			pdf.setFontSize(10);
+			// Split risk factors into multiple lines if needed
+			const riskText = riskFactors.join(', ');
+			const words = riskText.split(' ');
+			let currentLine = '';
+			
+			words.forEach(word => {
+				const testLine = currentLine + (currentLine ? ' ' : '') + word;
+				const textWidth = pdf.getTextWidth(testLine);
+				if (textWidth > columnWidth - 10 && currentLine) {
+					pdf.text(currentLine, leftColumnX + 5, leftY);
+					leftY += 5;
+					currentLine = word;
+				} else {
+					currentLine = testLine;
+				}
+			});
+			if (currentLine) {
+				pdf.text(currentLine, leftColumnX + 5, leftY);
+				leftY += 5;
+			}
+		}
+		
+		// Right column: Statistics
+		pdf.setFontSize(14);
+		pdf.text('Statistieken:', rightColumnX, rightY);
+		rightY += 8;
+		
+		pdf.setFontSize(10);
+		const stats = [
+			`Totaal tijd: ${document.getElementById('totalTime')?.textContent || '0'} min`,
+			`Max diepte: ${document.getElementById('maxDepth')?.textContent || '0'} m`,
+			`EAD: ${document.getElementById('EquivilantAirDepth')?.textContent || '0'} m`,
+			`Gemiddelde diepte: ${document.getElementById('avgDepth')?.textContent || '0'} m`,
+			`Totaal lucht: ${document.getElementById('totalAirConsumption')?.textContent || '0'} l`,
+			`Reserve druk: ${document.getElementById('minPressure')?.textContent || '0'} bar`,
+			`Omkeer druk: ${document.getElementById('returnPressure')?.textContent || '0'} bar`,
+			`Nultijd: ${document.getElementById('nultijd')?.textContent || '0'} min`,
+			`pO₂: ${document.getElementById('pO2')?.textContent || '0'} %`
+		];
+		
+		// Add MOD limit if visible
+		const modLimitCard = document.getElementById('modLimitCard');
+		if (modLimitCard && modLimitCard.style.display !== 'none') {
+			const modLimit = document.getElementById('modLimit')?.textContent || '0';
+			stats.push(`MOD limit: ${modLimit} m`);
+		}
+		
+		stats.forEach(stat => {
+			pdf.text(stat, rightColumnX + 5, rightY);
+			rightY += 5;
+		});
+		
+		// Continue with chart and table below the columns
+		yPosition = Math.max(leftY, rightY) + 15;
+		
+		// Try to capture the chart
+		const chartCanvas = document.getElementById('depthChart');
+		if (chartCanvas) {
+			try {
+				pdf.setFontSize(14);
+				pdf.text('Duikprofiel:', 20, yPosition);
+				yPosition += 10;
+				
+				// Convert canvas to image
+				const chartImgData = chartCanvas.toDataURL('image/png');
+				
+				// Calculate dimensions to fit on page
+				const imgWidth = pageWidth - 40;
+				const imgHeight = (chartCanvas.height / chartCanvas.width) * imgWidth;
+				
+				if (yPosition + imgHeight > pageHeight - 20) {
+					pdf.addPage();
+					yPosition = 20;
+				}
+				
+				pdf.addImage(chartImgData, 'PNG', 20, yPosition, imgWidth, imgHeight);
+				yPosition += imgHeight + 15;
+			} catch (error) {
+				console.warn('Could not add chart to PDF:', error);
+				pdf.setFontSize(10);
+				pdf.text('(Chart could not be captured - view on screen)', 20, yPosition);
+				yPosition += 10;
+			}
+		}
+		
+		// Add table data
+		pdf.setFontSize(14);
+		pdf.text('Duiktabel:', 20, yPosition);
+		yPosition += 10;
+		
+		// Get table data
+		const tableRows = [];
+		document.querySelectorAll('#tableBody tr').forEach(row => {
+			const rowData = [];
+			row.querySelectorAll('input[type="number"]').forEach(input => {
+				rowData.push(input.value || '0');
+			});
+			if (rowData.some(val => val !== '0')) { // Only add rows with data
+				tableRows.push(rowData);
+			}
+		});
+		
+		if (tableRows.length > 0) {
+			pdf.setFontSize(8);
+			
+			// Table headers
+			const headers = ['#', 'Tijd Cumu', 'Tijd', 'Diepte', 'Bar Druk', 'Verbruik', 'Flesdruk'];
+			let xPos = 20;
+			
+			headers.forEach(header => {
+				pdf.text(header, xPos, yPosition);
+				xPos += 25;
+			});
+			
+			yPosition += 5;
+			
+			// Table rows
+			tableRows.forEach((row, index) => {
+				if (yPosition > pageHeight - 20) {
+					pdf.addPage();
+					yPosition = 20;
+					
+					// Repeat headers on new page
+					xPos = 20;
+					headers.forEach(header => {
+						pdf.text(header, xPos, yPosition);
+						xPos += 25;
+					});
+					yPosition += 5;
+				}
+				
+				xPos = 20;
+				row.forEach(cell => {
+					pdf.text(cell, xPos, yPosition);
+					xPos += 25;
+				});
+				yPosition += 4;
+			});
+		} else {
+			pdf.setFontSize(10);
+			pdf.text('Geen duikdata beschikbaar', 20, yPosition);
+		}
+		
+		// Generate filename
+		const locatie = params.duiklocatie || 'duik';
+		let datePart = '';
+		if (params.datum) {
+			const parts = params.datum.split('-');
+			if (parts.length === 3) {
+				const year = parts[0];
+				const month = parseInt(parts[1], 10) - 1;
+				const day = parts[2];
+				const months = ['jan','feb','mar','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+				const mname = months[month] || parts[1];
+				datePart = `${day}-${mname}`;
+			}
+		}
+		const duikerPart = params.duiker || '';
+		let filename = `${locatie}-${datePart}-${duikerPart}`.replace(/[^a-zA-Z0-9\-_.]/g, '_');
+		
+		// Save the PDF
+		pdf.save(`${filename}.pdf`);
+		
+		alert('PDF export succesvol! Het bestand is gedownload.');
+		
+	} catch (error) {
+		console.error('PDF export error:', error);
+		alert('Er is een fout opgetreden bij het maken van de PDF. Probeer het opnieuw.');
+	}
 }
 
 // Import table data and parameters from JSON

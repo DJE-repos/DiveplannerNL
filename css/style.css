@@ -810,3 +810,196 @@ h3.collapsible.collapsed + .settings-row {
 .chart-container h2.collapsible.collapsed {
     margin-bottom: 0;
 }
+
+/* Print styles */
+@media print {
+@media print {
+    /* Hide UI elements not needed for printing */
+    .header-controls,
+    button,
+    input[type="file"],
+    .collapsible::after,
+    .move-buttons,
+    .table-controls {
+        display: none !important;
+    }
+    
+    /* Expand all collapsible sections */
+    .collapsible {
+        display: block !important;
+    }
+    
+    /* Override collapsed section hiding in print */
+    h2.collapsible.collapsed + .table-content-wrapper,
+    h2.collapsible.collapsed + .air-table-wrapper,
+    h3.collapsible.collapsed + .settings-row {
+        display: block !important;
+    }
+    
+    /* Page breaks - avoid breaking within sections only */
+    .settings-section,
+    .chart-container,
+    .stats-grid,
+    .stats-grid-mini,
+    .air-table-container,
+    .table-content-wrapper {
+        page-break-inside: avoid;
+    }
+    
+    /* Table styling for print */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        page-break-inside: auto;
+    }
+    
+    th, td {
+        border: 1px solid #000;
+        padding: 4px;
+        font-size: 10px;
+    }
+    
+    th {
+        page-break-after: avoid;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    tbody tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    /* Chart scaling and visibility */
+    .chart-container {
+        display: block !important;
+        visibility: visible !important;
+        page-break-inside: avoid;
+    }
+    
+    .chart-container h2 {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    .chart-container canvas {
+        display: block !important;
+        visibility: visible !important;
+        max-width: 100% !important;
+        height: 300px !important; /* Give it a fixed height for print */
+        page-break-inside: avoid;
+        border: 1px solid #000 !important; /* Add border to ensure it's visible */
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Add a print note for chart if canvas doesn't work */
+    .chart-container::after {
+        content: "Chart may not display in print - view on screen for visual data";
+        display: block;
+        font-size: 10px;
+        color: #666;
+        text-align: center;
+        margin-top: 10px;
+        font-style: italic;
+    }
+    
+    /* Table visibility */
+    .table-content-wrapper,
+    .table-container,
+    .table-container table,
+    .table-container thead,
+    .table-container tbody,
+    .table-container tr,
+    .table-container th,
+    .table-container td {
+        display: table !important;
+        visibility: visible !important;
+    }
+    
+    .table-container tr {
+        display: table-row !important;
+    }
+    
+    .table-container th,
+    .table-container td {
+        display: table-cell !important;
+        border: 1px solid #000 !important;
+        padding: 4px !important;
+    }
+    
+    /* Ensure table input values are visible in print */
+    .table-container input {
+        display: inline !important;
+        border: none !important;
+        background: transparent !important;
+        color: black !important;
+        font-size: 10px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: auto !important;
+        min-width: 20px !important;
+    }
+    
+    /* Stat cards layout for print */
+    .stats-grid,
+    .stats-grid-mini {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
+        gap: 8px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .stat-card {
+        border: 1px solid #000 !important;
+        background: white !important;
+        box-shadow: none !important;
+        padding: 6px !important;
+        page-break-inside: avoid;
+    }
+    
+    /* Form inputs styling for print */
+    .input-group input,
+    .input-group select,
+    .multiselect-header {
+        border: 1px solid #000 !important;
+        background: white !important;
+        color: black !important;
+        font-size: 10px !important;
+        padding: 4px !important;
+    }
+    
+    /* Layout adjustments */
+    body {
+        font-size: 12px;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .container {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        background: white !important;
+        box-shadow: none !important;
+    }
+    
+    h1, h2, h3 {
+        color: black !important;
+        page-break-after: avoid;
+    }
+    
+    /* Ensure multiselect options are not shown in print */
+    .multiselect-options {
+        display: none !important;
+    }
+    
+    /* Make sure the selected risk factors are visible */
+    .multiselect-header {
+        border: 1px solid #000 !important;
+        background: white !important;
+    }
+}
