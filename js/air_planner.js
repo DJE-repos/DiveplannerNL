@@ -798,8 +798,14 @@ function calculatepO2() {
 	const modLimitElement = document.getElementById('modLimit');
 	if (modLimitCard && modLimitElement) {
 		if (lowerLimit < 1.4 || eanx > 21) {
-			// Calculate MOD limit: [(lowerLimit / (eanx/100)) - 1] * 10
-			const modLimit = ((lowerLimit / (eanx / 100)) - 1) * 10;
+			let modLimit;
+			if (eanx > 21 && eanx < 35) {
+				// Fixed MOD limit of 30m for EANx between 21 and 35
+				modLimit = 30;
+			} else {
+				// Calculate MOD limit: [(lowerLimit / (eanx/100)) - 1] * 10
+				modLimit = ((lowerLimit / (eanx / 100)) - 1) * 10;
+			}
 			modLimitElement.textContent = modLimit.toFixed(1);
 			modLimitCard.style.display = 'flex';
 		} else {
