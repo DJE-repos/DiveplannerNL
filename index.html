@@ -10,11 +10,17 @@
 <body>
     <div>
         <h1>
-            <span class="title">🤿 Duikplanner</span>
+            <div class="title-wrap">
+                <span class="title">🤿 Duikplanner</span>
+                <span id="nitroxBadge" class="nitrox-badge" style="display: none;">NITROX EAN21%</span>
+            </div>
             <div class="header-controls">
                 <button id="jsonImportBtn" class="header-btn">📂 import</button>
                 <button id="jsonExportBtn" class="header-btn">💾 export</button>
                 <button id="pdfExportBtn" class="header-btn">📄 PDF</button>
+                <label class="header-color-control" for="backgroundColor">BG
+                    <input type="color" id="backgroundColor" name="backgroundColor" value="#dde3fd" aria-label="Achtergrondkleur" oninput="applyBackgroundColor(this.value)" onchange="applyBackgroundColor(this.value)">
+                </label>
                 <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
             </div>
         </h1>

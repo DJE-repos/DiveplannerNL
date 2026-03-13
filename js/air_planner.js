@@ -1,6 +1,58 @@
 let rowCounter = 1;
 let depthChart = null;
 let airTableData = null;
+const DEFAULT_BACKGROUND_COLOR = '#dde3fd';
+
+function normalizeHexColor(colorValue) {
+	if (typeof colorValue !== 'string') return null;
+	const trimmed = colorValue.trim();
+
+	if (/^#([0-9a-fA-F]{6})$/.test(trimmed)) {
+		return trimmed.toLowerCase();
+	}
+
+	if (/^#([0-9a-fA-F]{3})$/.test(trimmed)) {
+		const r = trimmed[1];
+		const g = trimmed[2];
+		const b = trimmed[3];
+		return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+	}
+
+	return null;
+}
+
+function getDarkerHexColor(hexColor, darkenRatio = 0.55) {
+	const normalizedColor = normalizeHexColor(hexColor);
+	if (!normalizedColor) return '#0617da';
+
+	const red = parseInt(normalizedColor.slice(1, 3), 16);
+	const green = parseInt(normalizedColor.slice(3, 5), 16);
+	const blue = parseInt(normalizedColor.slice(5, 7), 16);
+	const ratio = Math.min(Math.max(darkenRatio, 0), 0.95);
+
+	const darkerRed = Math.max(0, Math.round(red * (1 - ratio)));
+	const darkerGreen = Math.max(0, Math.round(green * (1 - ratio)));
+	const darkerBlue = Math.max(0, Math.round(blue * (1 - ratio)));
+
+	const toHex = value => value.toString(16).padStart(2, '0');
+	return `#${toHex(darkerRed)}${toHex(darkerGreen)}${toHex(darkerBlue)}`;
+}
+
+function applyBackgroundColor(colorValue) {
+	const normalizedColor = normalizeHexColor(colorValue) || DEFAULT_BACKGROUND_COLOR;
+	const darkerColor = getDarkerHexColor(normalizedColor);
+	const gradientValue = `linear-gradient(135deg, ${normalizedColor} 50%, ${darkerColor} 100%)`;
+
+	document.documentElement.style.setProperty('--page-bg-color', normalizedColor);
+	document.documentElement.style.setProperty('--page-bg-color-dark', darkerColor);
+	document.documentElement.style.background = gradientValue;
+	document.body.style.background = gradientValue;
+
+	const backgroundColorInput = document.querySelector('input[name="backgroundColor"]');
+	if (backgroundColorInput && backgroundColorInput.value !== normalizedColor) {
+		backgroundColorInput.value = normalizedColor;
+	}
+}
 
 // Load air table data
 async function loadAirTable() {
@@ -238,6 +290,14 @@ document.addEventListener('DOMContentLoaded', function() {
 		
 		// Setup preset input listeners
 		PresetsAddEventListeners();
+
+		// Setup background color picker
+		const backgroundColorInput = document.querySelector('input[name="backgroundColor"]');
+		if (backgroundColorInput) {
+			applyBackgroundColor(backgroundColorInput.value);
+			backgroundColorInput.addEventListener('input', e => applyBackgroundColor(e.target.value));
+			backgroundColorInput.addEventListener('change', e => applyBackgroundColor(e.target.value));
+		}
 		
 		// Initialize and update chart
 		initializeChart();
@@ -705,6 +765,20 @@ function getAllCalculations() {
 	};
 }
 
+function updateNitroxBadge(eanxValue) {
+	const nitroxBadge = document.getElementById('nitroxBadge');
+	if (!nitroxBadge) return;
+
+	const eanx = parseFloat(eanxValue);
+	if (Number.isFinite(eanx) && eanx > 21) {
+		const displayValue = Number.isInteger(eanx) ? eanx.toFixed(0) : eanx.toString();
+		nitroxBadge.textContent = `NITROX EAN${displayValue}%`;
+		nitroxBadge.style.display = 'inline-flex';
+	} else {
+		nitroxBadge.style.display = 'none';
+	}
+}
+
 
 // Optional: Function to get all calculations at once
 // Calculate EAD (Equivalent Air Depth) for Nitrox
@@ -718,10 +792,10 @@ function calculateEAD() {
 	
 	const eanx = parseFloat(eanxInput.value) || 21;
 	const mod = parseFloat(modInput.value) || 0;
+	updateNitroxBadge(eanx);
 	
 	// Only show EAD card if EANx > 21
 	if (eanx > 21) {
-		document.body.style.background = 'linear-gradient(135deg, #ebffed 50%, #06da34 100%)';
 		if (eadCard) {
 			eadCard.style.display = 'flex';
 		}
@@ -736,7 +810,6 @@ function calculateEAD() {
 		updateNultijdAndGroup();
 	} else {
 		// Hide EAD card if EANx <= 21
-		document.body.style.background = 'linear-gradient(135deg, #dde3fd 50%, #0617da 100%)';
 		if (eadCard) {
 			eadCard.style.display = 'none';
 		}
@@ -745,6 +818,10 @@ function calculateEAD() {
 		// Recalculate nultijd and HHG using MOD value
 		updateNultijdAndGroup();
 	}
+
+	// Keep the page background in sync with the user's BG color selection.
+	const backgroundColorInput = document.querySelector('input[name="backgroundColor"]');
+	applyBackgroundColor(backgroundColorInput?.value || DEFAULT_BACKGROUND_COLOR);
 }
 
 // Calculate pO2 (Partial Pressure of Oxygen) for Nitrox
@@ -1238,6 +1315,7 @@ function exportToJSON() {
 		datum: document.querySelector('input[name="datum"]').value,
 		kentering: document.querySelector('input[name="kentering"]').value,
 		type: document.querySelector('select[name="type"]').value,
+		backgroundColor: normalizeHexColor(document.querySelector('input[name="backgroundColor"]')?.value) || DEFAULT_BACKGROUND_COLOR,
 		airConsumption_preset: document.querySelector('input[name="airConsumption_preset"]').value,
 		Flesinhoud: document.querySelector('input[name="Flesinhoud"]').value,
 		Flesdruk: document.querySelector('input[name="Flesdruk"]').value,
@@ -1608,6 +1686,7 @@ function handleJSONImport(event) {
 			document.querySelector('input[name="datum"]').value = params.datum || '';
 			document.querySelector('input[name="kentering"]').value = params.kentering || '';
 			document.querySelector('select[name="type"]').value = params.type || 'LW';
+			applyBackgroundColor(params.backgroundColor || DEFAULT_BACKGROUND_COLOR);
 			document.querySelector('input[name="airConsumption_preset"]').value = params.airConsumption_preset || '21';
 			document.querySelector('input[name="Flesinhoud"]').value = params.Flesinhoud || '10';
 			document.querySelector('input[name="Flesdruk"]').value = params.Flesdruk || '280';

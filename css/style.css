@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #dde3fd 50%, #0617da 100%);
+    background: linear-gradient(135deg, var(--page-bg-color, #dde3fd) 50%, var(--page-bg-color-dark, #0617da) 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -28,6 +28,26 @@ h1 {
     font-size: 1.5rem;
     color: #99caf5;
     background-clip: text;
+}
+
+.title-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nitrox-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #4fae5f;
+    color: #ffef5a;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .table-controls {
@@ -379,6 +399,12 @@ tr:last-child td {
     min-width: 0;
 }
 
+.input-group input[type="color"] {
+    padding: 4px;
+    height: 40px;
+    cursor: pointer;
+}
+
 .input-group select {
     padding: 10px;
     border: 2px solid #e0e0e0;
@@ -535,9 +561,51 @@ h1 button {
     align-items: center;
 }
 
+.header-btn,
+.header-color-control {
+    min-height: 34px;
+    box-sizing: border-box;
+}
+
 .header-btn svg, .header-btn img {
     width: 16px;
     height: 16px;
+}
+
+.header-color-control {
+    padding: 8px 10px;
+    background: linear-gradient(180deg,#2b7be9,#1b5fc4);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.header-color-control input[type="color"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.header-color-control input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.header-color-control input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
 }
 
 @media (max-width: 720px) {
