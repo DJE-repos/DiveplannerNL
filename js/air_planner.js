@@ -1,6 +1,7 @@
 let rowCounter = 1;
 let depthChart = null;
 let airTableData = null;
+let backgroundColorPicker = null;
 const DEFAULT_BACKGROUND_COLOR = '#dde3fd';
 
 function normalizeHexColor(colorValue) {
@@ -21,30 +22,101 @@ function normalizeHexColor(colorValue) {
 	return null;
 }
 
-function getDarkerHexColor(hexColor, darkenRatio = 0.55) {
+function parseTimeToMinutes(timeValue) {
+	const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec((timeValue || '').trim());
+	if (!match) return null;
+	return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+}
+
+function formatMinutesAsTime(totalMinutes) {
+	const minutesPerDay = 24 * 60;
+	const normalizedMinutes = ((totalMinutes % minutesPerDay) + minutesPerDay) % minutesPerDay;
+	const hours = Math.floor(normalizedMinutes / 60);
+	const minutes = normalizedMinutes % 60;
+	return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function getDuikvensterFromKentering(kenteringValue) {
+	const kenteringMinutes = parseTimeToMinutes(kenteringValue);
+	if (kenteringMinutes === null) return null;
+
+	return {
+		van: formatMinutesAsTime(kenteringMinutes - 30),
+		tot: formatMinutesAsTime(kenteringMinutes + 30)
+	};
+}
+
+function setDuikvensterFromKentering(force = false) {
+	const kenteringInput = document.querySelector('input[name="kentering"]');
+	const duikvensterVanInput = document.querySelector('input[name="duikvensterVan"]');
+	const duikvensterTotInput = document.querySelector('input[name="duikvensterTot"]');
+
+	if (!kenteringInput || !duikvensterVanInput || !duikvensterTotInput) return;
+
+	const duikvenster = getDuikvensterFromKentering(kenteringInput.value);
+	if (!duikvenster) return;
+
+	const hasManualValues = duikvensterVanInput.dataset.manualEdit === 'true' || duikvensterTotInput.dataset.manualEdit === 'true';
+	if (!force && hasManualValues) return;
+
+	duikvensterVanInput.value = duikvenster.van;
+	duikvensterTotInput.value = duikvenster.tot;
+	duikvensterVanInput.dataset.manualEdit = 'false';
+	duikvensterTotInput.dataset.manualEdit = 'false';
+}
+
+function setupDuikvensterDefaults() {
+	const kenteringInput = document.querySelector('input[name="kentering"]');
+	const duikvensterVanInput = document.querySelector('input[name="duikvensterVan"]');
+	const duikvensterTotInput = document.querySelector('input[name="duikvensterTot"]');
+
+	if (!kenteringInput || !duikvensterVanInput || !duikvensterTotInput) return;
+
+	const markManualEdit = () => {
+		duikvensterVanInput.dataset.manualEdit = 'true';
+		duikvensterTotInput.dataset.manualEdit = 'true';
+	};
+
+	duikvensterVanInput.addEventListener('input', markManualEdit);
+	duikvensterTotInput.addEventListener('input', markManualEdit);
+
+	kenteringInput.addEventListener('input', () => setDuikvensterFromKentering(false));
+	kenteringInput.addEventListener('change', () => setDuikvensterFromKentering(false));
+
+	if (!duikvensterVanInput.value && !duikvensterTotInput.value) {
+		duikvensterVanInput.dataset.manualEdit = 'false';
+		duikvensterTotInput.dataset.manualEdit = 'false';
+		setDuikvensterFromKentering(true);
+	} else {
+		duikvensterVanInput.dataset.manualEdit = 'true';
+		duikvensterTotInput.dataset.manualEdit = 'true';
+	}
+}
+
+function getLighterHexColor(hexColor, lightenRatio = 0.82) {
 	const normalizedColor = normalizeHexColor(hexColor);
-	if (!normalizedColor) return '#0617da';
+	if (!normalizedColor) return '#f3f6ff';
 
 	const red = parseInt(normalizedColor.slice(1, 3), 16);
 	const green = parseInt(normalizedColor.slice(3, 5), 16);
 	const blue = parseInt(normalizedColor.slice(5, 7), 16);
-	const ratio = Math.min(Math.max(darkenRatio, 0), 0.95);
+	const ratio = Math.min(Math.max(lightenRatio, 0), 0.98);
 
-	const darkerRed = Math.max(0, Math.round(red * (1 - ratio)));
-	const darkerGreen = Math.max(0, Math.round(green * (1 - ratio)));
-	const darkerBlue = Math.max(0, Math.round(blue * (1 - ratio)));
+	const lighterRed = Math.min(255, Math.round(red + (255 - red) * ratio));
+	const lighterGreen = Math.min(255, Math.round(green + (255 - green) * ratio));
+	const lighterBlue = Math.min(255, Math.round(blue + (255 - blue) * ratio));
 
 	const toHex = value => value.toString(16).padStart(2, '0');
-	return `#${toHex(darkerRed)}${toHex(darkerGreen)}${toHex(darkerBlue)}`;
+	return `#${toHex(lighterRed)}${toHex(lighterGreen)}${toHex(lighterBlue)}`;
 }
 
 function applyBackgroundColor(colorValue) {
 	const normalizedColor = normalizeHexColor(colorValue) || DEFAULT_BACKGROUND_COLOR;
-	const darkerColor = getDarkerHexColor(normalizedColor);
-	const gradientValue = `linear-gradient(135deg, ${normalizedColor} 50%, ${darkerColor} 100%)`;
+	const lighterColor = getLighterHexColor(normalizedColor);
+	const gradientValue = `linear-gradient(135deg, ${lighterColor} 50%, ${normalizedColor} 100%)`;
 
 	document.documentElement.style.setProperty('--page-bg-color', normalizedColor);
-	document.documentElement.style.setProperty('--page-bg-color-dark', darkerColor);
+	document.documentElement.style.setProperty('--page-bg-color-light', lighterColor);
 	document.documentElement.style.background = gradientValue;
 	document.body.style.background = gradientValue;
 
@@ -52,6 +124,99 @@ function applyBackgroundColor(colorValue) {
 	if (backgroundColorInput && backgroundColorInput.value !== normalizedColor) {
 		backgroundColorInput.value = normalizedColor;
 	}
+
+	const backgroundColorSwatch = document.getElementById('backgroundColorSwatch');
+	if (backgroundColorSwatch) {
+		backgroundColorSwatch.style.backgroundColor = normalizedColor;
+	}
+}
+
+function setupBackgroundColorPicker() {
+	const backgroundColorInput = document.querySelector('input[name="backgroundColor"]');
+	const backgroundColorControl = document.getElementById('backgroundColorControl');
+
+	if (!backgroundColorInput) return;
+
+	const initialColor = normalizeHexColor(backgroundColorInput.value) || DEFAULT_BACKGROUND_COLOR;
+	backgroundColorInput.value = initialColor;
+	applyBackgroundColor(initialColor);
+
+	if (window.Pickr && backgroundColorControl) {
+		const applyPickrColor = color => {
+			if (!color) return;
+			const hexColor = normalizeHexColor(color.toHEXA().toString());
+			if (!hexColor) return;
+			backgroundColorInput.value = hexColor;
+			applyBackgroundColor(hexColor);
+		};
+
+		backgroundColorPicker = Pickr.create({
+			el: '#backgroundColorControl',
+			theme: 'classic',
+			useAsButton: true,
+			default: initialColor,
+			comparison: false,
+			components: {
+				preview: true,
+				opacity: false,
+				hue: true,
+				interaction: {
+					hex: true,
+					input: true,
+					save: true,
+					cancel: true
+				}
+			}
+		});
+
+		backgroundColorPicker.on('change', applyPickrColor);
+		backgroundColorPicker.on('save', (color, instance) => {
+			applyPickrColor(color);
+			instance.hide();
+		});
+		backgroundColorPicker.on('cancel', instance => {
+			applyBackgroundColor(backgroundColorInput.value || DEFAULT_BACKGROUND_COLOR);
+			instance.hide();
+		});
+	} else {
+		backgroundColorInput.classList.remove('header-color-native-fallback');
+		backgroundColorInput.addEventListener('input', e => applyBackgroundColor(e.target.value));
+		backgroundColorInput.addEventListener('change', e => applyBackgroundColor(e.target.value));
+
+		if (backgroundColorControl) {
+			backgroundColorControl.style.display = 'none';
+		}
+	}
+}
+
+function toggleCollapsibleSection(header) {
+	if (!header) return;
+
+	const contentWrapper = header.nextElementSibling;
+	if (!contentWrapper) return;
+
+	const expandedDisplay = header.dataset.expandedDisplay || 'block';
+	const shouldCollapse = !header.classList.contains('collapsed');
+
+	header.classList.toggle('collapsed', shouldCollapse);
+	contentWrapper.style.display = shouldCollapse ? 'none' : expandedDisplay;
+}
+
+function setupCollapsibleSections() {
+	const collapsibleHeaders = document.querySelectorAll('.collapsible[data-expanded-display]');
+
+	collapsibleHeaders.forEach(header => {
+		header.addEventListener('click', () => toggleCollapsibleSection(header));
+
+		const contentWrapper = header.nextElementSibling;
+		if (!contentWrapper) return;
+
+		if (header.classList.contains('collapsed')) {
+			contentWrapper.style.display = 'none';
+		} else if (!contentWrapper.style.display || contentWrapper.style.display === 'none') {
+			contentWrapper.style.display = header.dataset.expandedDisplay || 'block';
+		}
+	});
 }
 
 // Load air table data
@@ -249,6 +414,8 @@ function updateMDDFromMaxDepth() {
 
 // Initialize the chart when page loads
 document.addEventListener('DOMContentLoaded', function() {
+	setupCollapsibleSections();
+
 	// First load the air table
 	loadAirTable().then(() => {
 		console.log('Air table loaded successfully');
@@ -291,13 +458,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		// Setup preset input listeners
 		PresetsAddEventListeners();
 
+		// Setup duikvenster defaults based on kentering
+		setupDuikvensterDefaults();
+
 		// Setup background color picker
-		const backgroundColorInput = document.querySelector('input[name="backgroundColor"]');
-		if (backgroundColorInput) {
-			applyBackgroundColor(backgroundColorInput.value);
-			backgroundColorInput.addEventListener('input', e => applyBackgroundColor(e.target.value));
-			backgroundColorInput.addEventListener('change', e => applyBackgroundColor(e.target.value));
-		}
+		setupBackgroundColorPicker();
 		
 		// Initialize and update chart
 		initializeChart();
@@ -1315,6 +1480,8 @@ function exportToJSON() {
 		datum: document.querySelector('input[name="datum"]').value,
 		kentering: document.querySelector('input[name="kentering"]').value,
 		type: document.querySelector('select[name="type"]').value,
+		duikvensterVan: document.querySelector('input[name="duikvensterVan"]')?.value || '',
+		duikvensterTot: document.querySelector('input[name="duikvensterTot"]')?.value || '',
 		backgroundColor: normalizeHexColor(document.querySelector('input[name="backgroundColor"]')?.value) || DEFAULT_BACKGROUND_COLOR,
 		airConsumption_preset: document.querySelector('input[name="airConsumption_preset"]').value,
 		Flesinhoud: document.querySelector('input[name="Flesinhoud"]').value,
@@ -1448,6 +1615,8 @@ async function exportToPDF() {
 			datum: document.querySelector('input[name="datum"]').value,
 			kentering: document.querySelector('input[name="kentering"]').value,
 			type: document.querySelector('select[name="type"]').value,
+			duikvensterVan: document.querySelector('input[name="duikvensterVan"]')?.value || '',
+			duikvensterTot: document.querySelector('input[name="duikvensterTot"]')?.value || '',
 			airConsumption_preset: document.querySelector('input[name="airConsumption_preset"]').value,
 			Flesinhoud: document.querySelector('input[name="Flesinhoud"]').value,
 			Flesdruk: document.querySelector('input[name="Flesdruk"]').value,
@@ -1466,6 +1635,7 @@ async function exportToPDF() {
 			`Locatie: ${params.duiklocatie || 'Niet ingevuld'}`,
 			`Datum: ${params.datum || 'Niet ingevuld'}`,
 			`Kentering: ${params.kentering || 'Niet ingevuld'}`,
+			`Duikvenster: ${(params.duikvensterVan && params.duikvensterTot) ? `${params.duikvensterVan} - ${params.duikvensterTot}` : 'Niet ingevuld'}`,
 			`Type: ${params.type || 'LW'}`,
 			`Verbruik (l/min): ${params.airConsumption_preset || '21'}`,
 			`Flesinhoud (l): ${params.Flesinhoud || '10'}`,
@@ -1686,7 +1856,25 @@ function handleJSONImport(event) {
 			document.querySelector('input[name="datum"]').value = params.datum || '';
 			document.querySelector('input[name="kentering"]').value = params.kentering || '';
 			document.querySelector('select[name="type"]').value = params.type || 'LW';
-			applyBackgroundColor(params.backgroundColor || DEFAULT_BACKGROUND_COLOR);
+			const duikvensterVanInput = document.querySelector('input[name="duikvensterVan"]');
+			const duikvensterTotInput = document.querySelector('input[name="duikvensterTot"]');
+			if (duikvensterVanInput && duikvensterTotInput) {
+				duikvensterVanInput.value = params.duikvensterVan || '';
+				duikvensterTotInput.value = params.duikvensterTot || '';
+				if (params.duikvensterVan && params.duikvensterTot) {
+					duikvensterVanInput.dataset.manualEdit = 'true';
+					duikvensterTotInput.dataset.manualEdit = 'true';
+				} else {
+					duikvensterVanInput.dataset.manualEdit = 'false';
+					duikvensterTotInput.dataset.manualEdit = 'false';
+					setDuikvensterFromKentering(true);
+				}
+			}
+			const importBackgroundColor = normalizeHexColor(params.backgroundColor) || DEFAULT_BACKGROUND_COLOR;
+			applyBackgroundColor(importBackgroundColor);
+			if (backgroundColorPicker) {
+				backgroundColorPicker.setColor(importBackgroundColor);
+			}
 			document.querySelector('input[name="airConsumption_preset"]').value = params.airConsumption_preset || '21';
 			document.querySelector('input[name="Flesinhoud"]').value = params.Flesinhoud || '10';
 			document.querySelector('input[name="Flesdruk"]').value = params.Flesdruk || '280';

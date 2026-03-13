@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luchtplanner</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css">
     
 </head>
 <body>
@@ -18,14 +19,15 @@
                 <button id="jsonImportBtn" class="header-btn">📂 import</button>
                 <button id="jsonExportBtn" class="header-btn">💾 export</button>
                 <button id="pdfExportBtn" class="header-btn">📄 PDF</button>
-                <label class="header-color-control" for="backgroundColor">BG
-                    <input type="color" id="backgroundColor" name="backgroundColor" value="#dde3fd" aria-label="Achtergrondkleur" oninput="applyBackgroundColor(this.value)" onchange="applyBackgroundColor(this.value)">
-                </label>
+                <button id="backgroundColorControl" class="header-color-control" type="button" aria-label="Achtergrondkleur">BG
+                    <span id="backgroundColorSwatch" class="header-color-swatch" aria-hidden="true"></span>
+                </button>
+                <input type="color" id="backgroundColor" name="backgroundColor" value="#dde3fd" class="header-color-native-fallback" aria-label="Achtergrondkleur fallback">
                 <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
             </div>
         </h1>
 		<div class="settings-section">
-            <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='grid';}">
+            <h3 class="collapsible" data-expanded-display="grid">
                 📝 Duik info <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row">
@@ -53,10 +55,18 @@
                         <option value="Geen tij">Geen tij</option>
                     </select>
                 </div>
+                <div class="input-group duikvenster-group">
+                    <label for="duikvensterVan">Duikvenster</label>
+                    <div class="duikvenster-inputs">
+                        <input type="time" id="duikvensterVan" name="duikvensterVan" value="" step="60" aria-label="Duikvenster van">
+                        <span>tot</span>
+                        <input type="time" id="duikvensterTot" name="duikvensterTot" value="" step="60" aria-label="Duikvenster tot">
+                    </div>
+                </div>
             </div>
         </div>
         <div class="settings-section">
-            <h3 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='grid';}">
+            <h3 class="collapsible" data-expanded-display="grid">
                 ⚙️ Duik parameters <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row parameters-row">
@@ -125,13 +135,13 @@
             </div>
         </div>
         <div class="chart-container">
-            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='block';}">
+            <h2 class="collapsible" data-expanded-display="block">
                 📈 Duikprofiel <span class="collapse-arrow">▼</span> 
             </h2>
             <canvas id="depthChart"></canvas>
         </div>
         <div class="chart-container">
-            <h2 class="collapsible" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='block';}">
+            <h2 class="collapsible" data-expanded-display="block">
                 𝄜 Duiktabel <span class="collapse-arrow">▼</span>
             </h2>
             <div class="table-content-wrapper">
@@ -205,7 +215,7 @@
             
         </div>
         <div class="air-table-container">
-            <h2 class="collapsible collapsed" onclick="this.classList.toggle('collapsed'); const w=this.nextElementSibling; if(this.classList.contains('collapsed')){w.style.display='none';} else{w.style.display='block';}">
+            <h2 class="collapsible collapsed" data-expanded-display="block">
                 📊 Duiktabel (Table A) <span class="collapse-arrow">▼</span>
             </h2>
             <div class="air-table-wrapper" style="display: none;">
@@ -217,6 +227,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
     <script type="text/javascript" src="js/air_planner.js"></script>
 </body>
 </html>
