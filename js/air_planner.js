@@ -3,6 +3,11 @@ let depthChart = null;
 let airTableData = null;
 let backgroundColorPicker = null;
 const DEFAULT_BACKGROUND_COLOR = '#dde3fd';
+const PLANNER_CACHE_KEY = 'duikplanner_state_v2';
+const CACHE_SAVE_DEBOUNCE_MS = 250;
+let plannerCacheSaveTimeoutId = null;
+let isApplyingCachedState = false;
+let cacheListenersSetup = false;
 
 function normalizeHexColor(colorValue) {
 	if (typeof colorValue !== 'string') return null;
@@ -20,6 +25,173 @@ function normalizeHexColor(colorValue) {
 	}
 
 	return null;
+}
+
+function clampNumber(value, min, max) {
+	return Math.min(Math.max(value, min), max);
+}
+
+function hexToRgb(hexColor) {
+	const normalizedColor = normalizeHexColor(hexColor);
+	if (!normalizedColor) return null;
+
+	return {
+		r: parseInt(normalizedColor.slice(1, 3), 16),
+		g: parseInt(normalizedColor.slice(3, 5), 16),
+		b: parseInt(normalizedColor.slice(5, 7), 16)
+	};
+}
+
+function rgbToHex(red, green, blue) {
+	const toHex = value => clampNumber(Math.round(value), 0, 255).toString(16).padStart(2, '0');
+	return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
+}
+
+function rgbToHsl(red, green, blue) {
+	const r = red / 255;
+	const g = green / 255;
+	const b = blue / 255;
+	const max = Math.max(r, g, b);
+	const min = Math.min(r, g, b);
+	const delta = max - min;
+
+	let hue = 0;
+	if (delta !== 0) {
+		if (max === r) {
+			hue = ((g - b) / delta) % 6;
+		} else if (max === g) {
+			hue = (b - r) / delta + 2;
+		} else {
+			hue = (r - g) / delta + 4;
+		}
+	}
+
+	hue = Math.round(hue * 60);
+	if (hue < 0) hue += 360;
+
+	const lightness = (max + min) / 2;
+	const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
+
+	return {
+		h: hue,
+		s: Math.round(saturation * 100),
+		l: Math.round(lightness * 100)
+	};
+}
+
+function hslToRgb(hue, saturation, lightness) {
+	const h = ((hue % 360) + 360) % 360;
+	const s = clampNumber(saturation, 0, 100) / 100;
+	const l = clampNumber(lightness, 0, 100) / 100;
+
+	const chroma = (1 - Math.abs(2 * l - 1)) * s;
+	const x = chroma * (1 - Math.abs((h / 60) % 2 - 1));
+	const m = l - chroma / 2;
+
+	let redPrime = 0;
+	let greenPrime = 0;
+	let bluePrime = 0;
+
+	if (h < 60) {
+		redPrime = chroma;
+		greenPrime = x;
+	} else if (h < 120) {
+		redPrime = x;
+		greenPrime = chroma;
+	} else if (h < 180) {
+		greenPrime = chroma;
+		bluePrime = x;
+	} else if (h < 240) {
+		greenPrime = x;
+		bluePrime = chroma;
+	} else if (h < 300) {
+		redPrime = x;
+		bluePrime = chroma;
+	} else {
+		redPrime = chroma;
+		bluePrime = x;
+	}
+
+	return {
+		r: Math.round((redPrime + m) * 255),
+		g: Math.round((greenPrime + m) * 255),
+		b: Math.round((bluePrime + m) * 255)
+	};
+}
+
+function hslToHex(hue, saturation, lightness) {
+	const rgbColor = hslToRgb(hue, saturation, lightness);
+	return rgbToHex(rgbColor.r, rgbColor.g, rgbColor.b);
+}
+
+function getContrastTextColor(hexColor) {
+	const rgbColor = hexToRgb(hexColor);
+	if (!rgbColor) return '#ffffff';
+
+	const brightness = (rgbColor.r * 299 + rgbColor.g * 587 + rgbColor.b * 114) / 1000;
+	return brightness > 150 ? '#152234' : '#ffffff';
+}
+
+function createThemePalette(baseHexColor) {
+	const baseRgb = hexToRgb(baseHexColor);
+	if (!baseRgb) return null;
+
+	const baseHsl = rgbToHsl(baseRgb.r, baseRgb.g, baseRgb.b);
+	const accentSaturation = clampNumber(Math.max(baseHsl.s + 20, 44), 42, 88);
+	const accentLightness = clampNumber(baseHsl.l > 62 ? baseHsl.l - 24 : 46, 34, 56);
+
+	const accent = hslToHex(baseHsl.h, accentSaturation, accentLightness);
+	const accentStrong = hslToHex(baseHsl.h, clampNumber(accentSaturation + 8, 48, 94), clampNumber(accentLightness - 12, 24, 44));
+	const accentSoft = hslToHex(baseHsl.h, clampNumber(accentSaturation - 16, 18, 72), clampNumber(accentLightness + 28, 68, 90));
+	const accentMuted = hslToHex(baseHsl.h, clampNumber(accentSaturation - 28, 10, 60), 95);
+	const attention = hslToHex(baseHsl.h, clampNumber(accentSaturation + 4, 46, 92), clampNumber(accentLightness - 6, 28, 46));
+	const attentionStrong = hslToHex(baseHsl.h, clampNumber(accentSaturation + 10, 50, 95), clampNumber(accentLightness - 18, 20, 38));
+	const heading = hslToHex(baseHsl.h, clampNumber(accentSaturation - 6, 24, 82), clampNumber(accentLightness - 6, 28, 46));
+	const text = hslToHex(baseHsl.h, 22, 24);
+	const textMuted = hslToHex(baseHsl.h, 10, 42);
+	const border = hslToHex(baseHsl.h, 26, 84);
+	const buttonText = getContrastTextColor(accentStrong);
+
+	const accentRgb = hexToRgb(accent);
+	const accentStrongRgb = hexToRgb(accentStrong);
+	const headingRgb = hexToRgb(heading);
+
+	return {
+		accent,
+		accentStrong,
+		accentSoft,
+		accentMuted,
+		attention,
+		attentionStrong,
+		heading,
+		text,
+		textMuted,
+		border,
+		buttonText,
+		accentRgb: `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`,
+		accentStrongRgb: `${accentStrongRgb.r}, ${accentStrongRgb.g}, ${accentStrongRgb.b}`,
+		headingRgb: `${headingRgb.r}, ${headingRgb.g}, ${headingRgb.b}`
+	};
+}
+
+function applyThemePalette(themePalette) {
+	if (!themePalette) return;
+
+	const rootStyle = document.documentElement.style;
+	rootStyle.setProperty('--theme-accent', themePalette.accent);
+	rootStyle.setProperty('--theme-accent-strong', themePalette.accentStrong);
+	rootStyle.setProperty('--theme-accent-soft', themePalette.accentSoft);
+	rootStyle.setProperty('--theme-accent-muted', themePalette.accentMuted);
+	rootStyle.setProperty('--theme-attention', themePalette.attention);
+	rootStyle.setProperty('--theme-attention-strong', themePalette.attentionStrong);
+	rootStyle.setProperty('--theme-heading', themePalette.heading);
+	rootStyle.setProperty('--theme-text', themePalette.text);
+	rootStyle.setProperty('--theme-text-muted', themePalette.textMuted);
+	rootStyle.setProperty('--theme-border', themePalette.border);
+	rootStyle.setProperty('--theme-button-text', themePalette.buttonText);
+	rootStyle.setProperty('--theme-accent-rgb', themePalette.accentRgb);
+	rootStyle.setProperty('--theme-accent-strong-rgb', themePalette.accentStrongRgb);
+	rootStyle.setProperty('--theme-heading-rgb', themePalette.headingRgb);
 }
 
 function parseTimeToMinutes(timeValue) {
@@ -113,10 +285,12 @@ function getLighterHexColor(hexColor, lightenRatio = 0.82) {
 function applyBackgroundColor(colorValue) {
 	const normalizedColor = normalizeHexColor(colorValue) || DEFAULT_BACKGROUND_COLOR;
 	const lighterColor = getLighterHexColor(normalizedColor);
+	const themePalette = createThemePalette(normalizedColor);
 	const gradientValue = `linear-gradient(135deg, ${lighterColor} 50%, ${normalizedColor} 100%)`;
 
 	document.documentElement.style.setProperty('--page-bg-color', normalizedColor);
 	document.documentElement.style.setProperty('--page-bg-color-light', lighterColor);
+	applyThemePalette(themePalette);
 	document.documentElement.style.background = gradientValue;
 	document.body.style.background = gradientValue;
 
@@ -129,6 +303,8 @@ function applyBackgroundColor(colorValue) {
 	if (backgroundColorSwatch) {
 		backgroundColorSwatch.style.backgroundColor = normalizedColor;
 	}
+
+	applyChartTheme();
 }
 
 function setupBackgroundColorPicker() {
@@ -148,6 +324,7 @@ function setupBackgroundColorPicker() {
 			if (!hexColor) return;
 			backgroundColorInput.value = hexColor;
 			applyBackgroundColor(hexColor);
+			queuePlannerStateCacheSave();
 		};
 
 		backgroundColorPicker = Pickr.create({
@@ -200,6 +377,7 @@ function toggleCollapsibleSection(header) {
 
 	header.classList.toggle('collapsed', shouldCollapse);
 	contentWrapper.style.display = shouldCollapse ? 'none' : expandedDisplay;
+	queuePlannerStateCacheSave();
 }
 
 function setupCollapsibleSections() {
@@ -377,24 +555,32 @@ function updateIntervalGroup(rowIndex, totalTime) {
 function updateNultijdWarning() {
 	const nultijdElement = document.getElementById('nultijd');
 	if (!nultijdElement) return;
+	const totalTimeElement = document.getElementById('totalTime');
 	
 	const nultijdValue = parseFloat(nultijdElement.textContent) || 0;
 	const totalTime = getTotalTime();
 	const nultijdCard = nultijdElement.closest('.stat-card');
+	const totalTimeCard = totalTimeElement ? totalTimeElement.closest('.stat-card') : null;
 	
 	console.log(`Nultijd: ${nultijdValue}, Total Time: ${totalTime}`);
 	
 	if (totalTime > nultijdValue && nultijdValue > 0) {
 		// Add warning color
-		if (!nultijdCard.classList.contains('warning')) {
+		if (nultijdCard && !nultijdCard.classList.contains('warning')) {
 			nultijdCard.classList.add('warning');
 			console.log(`⚠️ WARNING: Total dive time (${totalTime}min) exceeds nultijd (${nultijdValue}min)`);
 		}
+		if (totalTimeCard && !totalTimeCard.classList.contains('warning')) {
+			totalTimeCard.classList.add('warning');
+		}
 	} else {
 		// Remove warning color
-		if (nultijdCard.classList.contains('warning')) {
+		if (nultijdCard && nultijdCard.classList.contains('warning')) {
 			nultijdCard.classList.remove('warning');
 			console.log(`✓ Total dive time within nultijd limits`);
+		}
+		if (totalTimeCard && totalTimeCard.classList.contains('warning')) {
+			totalTimeCard.classList.remove('warning');
 		}
 	}
 }
@@ -464,18 +650,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		// Setup background color picker
 		setupBackgroundColorPicker();
 		
-		// Initialize and update chart
+		// Initialize chart
 		initializeChart();
-		updateChart();
-		updateAirConsumption();
-		updateRemainingPressure();
-		
-		// Initial calculation of nultijd and interval group
-		updateMetrics();
-		updateNultijdAndGroup();
-		calculateEAD();
-		calculatepO2();
-		
 
 		// Setup JSON export button
 		const jsonExportBtn = document.getElementById('jsonExportBtn');
@@ -502,13 +678,100 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (pdfExportBtn) {
 			pdfExportBtn.addEventListener('click', exportToPDF);
 		}
+
+		// Setup reset button
+		const resetPlannerBtn = document.getElementById('resetPlannerBtn');
+		if (resetPlannerBtn) {
+			resetPlannerBtn.addEventListener('click', resetPlannerState);
+		}
+
+		// Setup automatic local cache listeners
+		setupPlannerStateCacheListeners();
+
+		// Restore cached state if available, otherwise run default initialization updates
+		const restoredFromCache = loadPlannerStateFromCache();
+		if (!restoredFromCache) {
+			updateChart();
+			updateAirConsumption();
+			updateRemainingPressure();
+
+			// Initial calculation of nultijd and interval group
+			updateMetrics();
+			updateNultijdAndGroup();
+			calculateEAD();
+			calculatepO2();
+		}
 		
 		console.log('Initialization complete');
 	});
 });
 
+function getCssVariableValue(variableName, fallbackValue) {
+	const computedValue = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+	return computedValue || fallbackValue;
+}
+
+function buildRgbaColor(rgbTriplet, alphaValue) {
+	const safeRgbTriplet = typeof rgbTriplet === 'string' && rgbTriplet.includes(',')
+		? rgbTriplet
+		: '102, 126, 234';
+	return `rgba(${safeRgbTriplet}, ${alphaValue})`;
+}
+
+function applyChartTheme() {
+	if (!depthChart) return;
+
+	const accentColor = getCssVariableValue('--theme-accent', '#99caf5');
+	const accentStrongColor = getCssVariableValue('--theme-accent-strong', '#667eea');
+	const headingColor = getCssVariableValue('--theme-heading', '#1b5fc4');
+	const mutedTextColor = getCssVariableValue('--theme-text-muted', '#666666');
+	const buttonTextColor = getCssVariableValue('--theme-button-text', '#ffffff');
+	const accentRgb = getCssVariableValue('--theme-accent-rgb', '102, 126, 234');
+	const headingRgb = getCssVariableValue('--theme-heading-rgb', '27, 95, 196');
+
+	const dataset = depthChart.data?.datasets?.[0];
+	if (dataset) {
+		dataset.borderColor = accentColor;
+		dataset.backgroundColor = buildRgbaColor(accentRgb, 0.16);
+		dataset.pointBackgroundColor = accentStrongColor;
+		dataset.pointBorderColor = buttonTextColor;
+	}
+
+	if (depthChart.options?.plugins?.legend?.labels) {
+		depthChart.options.plugins.legend.labels.color = headingColor;
+	}
+
+	if (depthChart.options?.plugins?.tooltip) {
+		depthChart.options.plugins.tooltip.backgroundColor = buildRgbaColor(headingRgb, 0.92);
+		depthChart.options.plugins.tooltip.titleColor = buttonTextColor;
+		depthChart.options.plugins.tooltip.bodyColor = buttonTextColor;
+		depthChart.options.plugins.tooltip.borderColor = accentStrongColor;
+	}
+
+	if (depthChart.options?.scales?.x) {
+		depthChart.options.scales.x.title.color = headingColor;
+		depthChart.options.scales.x.grid.color = buildRgbaColor(accentRgb, 0.2);
+		depthChart.options.scales.x.ticks.color = mutedTextColor;
+	}
+
+	if (depthChart.options?.scales?.y) {
+		depthChart.options.scales.y.title.color = headingColor;
+		depthChart.options.scales.y.grid.color = buildRgbaColor(accentRgb, 0.2);
+		depthChart.options.scales.y.ticks.color = mutedTextColor;
+	}
+
+	depthChart.update('none');
+}
+
 function initializeChart() {
 	const ctx = document.getElementById('depthChart').getContext('2d');
+	const accentColor = getCssVariableValue('--theme-accent', '#99caf5');
+	const accentStrongColor = getCssVariableValue('--theme-accent-strong', '#667eea');
+	const headingColor = getCssVariableValue('--theme-heading', '#1b5fc4');
+	const mutedTextColor = getCssVariableValue('--theme-text-muted', '#666666');
+	const buttonTextColor = getCssVariableValue('--theme-button-text', '#ffffff');
+	const accentRgb = getCssVariableValue('--theme-accent-rgb', '102, 126, 234');
+	const headingRgb = getCssVariableValue('--theme-heading-rgb', '27, 95, 196');
 	
 	depthChart = new Chart(ctx, {
 		type: 'line',
@@ -517,12 +780,12 @@ function initializeChart() {
 			datasets: [{
 				label: 'duikprofiel',
 				data: [],
-				borderColor: '#99caf5',
-				backgroundColor: 'rgba(102, 126, 234, 0.1)',
+				borderColor: accentColor,
+				backgroundColor: buildRgbaColor(accentRgb, 0.16),
 				borderWidth: 3,
 				fill: true,
-				pointBackgroundColor: '#99caf5',
-				pointBorderColor: 'white',
+				pointBackgroundColor: accentStrongColor,
+				pointBorderColor: buttonTextColor,
 				pointBorderWidth: 2,
 				pointRadius: 6,
 				pointHoverRadius: 8
@@ -540,14 +803,14 @@ function initializeChart() {
 							size: 14,
 							weight: 'bold'
 						},
-						color: '#333'
+						color: headingColor
 					}
 				},
 				tooltip: {
-					backgroundColor: 'rgba(0, 0, 0, 0.8)',
-					titleColor: 'white',
-					bodyColor: 'white',
-					borderColor: 'rgb(102, 126, 234)',
+					backgroundColor: buildRgbaColor(headingRgb, 0.92),
+					titleColor: buttonTextColor,
+					bodyColor: buttonTextColor,
+					borderColor: accentStrongColor,
 					borderWidth: 1,
 					callbacks: {
 						label: function(context) {
@@ -573,13 +836,13 @@ function initializeChart() {
 							size: 14,
 							weight: 'bold'
 						},
-						color: '#333'
+						color: headingColor
 					},
 					grid: {
-						color: 'rgba(0, 0, 0, 0.1)'
+						color: buildRgbaColor(accentRgb, 0.2)
 					},
 					ticks: {
-						color: '#666',
+						color: mutedTextColor,
 						stepSize: 1,
 						callback: function(value) {
 							return value + ' min';
@@ -594,14 +857,14 @@ function initializeChart() {
 							size: 14,
 							weight: 'bold'
 						},
-						color: '#333'
+						color: headingColor
 					},
 					reverse: true, // This inverts the Y-axis
 					grid: {
-						color: 'rgba(0, 0, 0, 0.1)'
+						color: buildRgbaColor(accentRgb, 0.2)
 					},
 					ticks: {
-						color: '#666',
+						color: mutedTextColor,
 						callback: function(value) {
 							return Math.abs(value) + 'm';
 						}
@@ -614,6 +877,8 @@ function initializeChart() {
 			}
 		}
 	});
+
+	applyChartTheme();
 }
 
 function updateChart() {
@@ -728,6 +993,7 @@ function handleInputChange() {
 	updateAirConsumption();
 	updateRemainingPressure();
 	updateMetrics();
+	queuePlannerStateCacheSave();
 }
 
 // Add event listeners to update chart when data changes
@@ -847,6 +1113,7 @@ function addRow(time=0, depth=0) {
 	updateAirConsumption();
 	updateRemainingPressure();
 	updateMetrics();
+	queuePlannerStateCacheSave();
 }
 
 // Function to calculate total of 'time' column (time_val)
@@ -1344,6 +1611,7 @@ function deleteRow(button) {
 		updateAirConsumption();
 		updateRemainingPressure();
 		updateMetrics();
+		queuePlannerStateCacheSave();
 	}, 300);
 }
 
@@ -1369,6 +1637,7 @@ function moveRowUp(button) {
 		updateAirConsumption();
 		updateRemainingPressure();
 		updateMetrics();
+		queuePlannerStateCacheSave();
 	}
 }
 
@@ -1383,6 +1652,7 @@ function moveRowDown(button) {
 		updateAirConsumption();
 		updateRemainingPressure();
 		updateMetrics();
+		queuePlannerStateCacheSave();
 	}
 }
 
@@ -1436,19 +1706,238 @@ function setupDragAndDrop(row) {
 			updateRowNumbers();
 			updateTimeAccumulated();
 			updateChart();
+			queuePlannerStateCacheSave();
 		}
 		this.classList.remove('drop-zone');
 	});
 }
 
-function setCache(){
-	air_table=document.querySelectorAll('#tableBody tr');
-	localStorage.setItem("air_table", air_table);
+function collectCollapsibleStates() {
+	const headers = document.querySelectorAll('.collapsible[data-expanded-display]');
+	return Array.from(headers).map((header, index) => ({
+		index,
+		collapsed: header.classList.contains('collapsed')
+	}));
 }
-function loadCache(){
-	air_table=document.querySelectorAll('#tableBody tr')
-	air_table=localStorage.getItem("air_table");
-	
+
+function applyCollapsibleStates(collapsibleStates) {
+	if (!Array.isArray(collapsibleStates)) return;
+
+	const headers = document.querySelectorAll('.collapsible[data-expanded-display]');
+	collapsibleStates.forEach(state => {
+		if (!state || typeof state.index !== 'number') return;
+
+		const header = headers[state.index];
+		if (!header) return;
+
+		const contentWrapper = header.nextElementSibling;
+		if (!contentWrapper) return;
+
+		const collapsed = Boolean(state.collapsed);
+		header.classList.toggle('collapsed', collapsed);
+		contentWrapper.style.display = collapsed ? 'none' : (header.dataset.expandedDisplay || 'block');
+	});
+}
+
+function collectPlannerDataSnapshot() {
+	const params = {
+		duiker: document.querySelector('input[name="duiker"]')?.value || '',
+		duiklocatie: document.querySelector('input[name="duiklocatie"]')?.value || '',
+		datum: document.querySelector('input[name="datum"]')?.value || '',
+		kentering: document.querySelector('input[name="kentering"]')?.value || '',
+		type: document.querySelector('select[name="type"]')?.value || 'LW',
+		duikvensterVan: document.querySelector('input[name="duikvensterVan"]')?.value || '',
+		duikvensterTot: document.querySelector('input[name="duikvensterTot"]')?.value || '',
+		backgroundColor: normalizeHexColor(document.querySelector('input[name="backgroundColor"]')?.value) || DEFAULT_BACKGROUND_COLOR,
+		airConsumption_preset: document.querySelector('input[name="airConsumption_preset"]')?.value || '21',
+		Flesinhoud: document.querySelector('input[name="Flesinhoud"]')?.value || '10',
+		Flesdruk: document.querySelector('input[name="Flesdruk"]')?.value || '280',
+		MOD: document.querySelector('input[name="MOD"]')?.value || '0',
+		EANx: document.querySelector('input[name="EANx"]')?.value || '21',
+		usingReel: document.querySelector('input[name="usingReel"]')?.checked || false,
+		riskFactors: []
+	};
+
+	document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]').forEach(checkbox => {
+		if (checkbox.checked) {
+			params.riskFactors.push(checkbox.value);
+		}
+	});
+
+	const tableRows = [];
+	document.querySelectorAll('#tableBody tr').forEach(row => {
+		const rowData = {};
+		row.querySelectorAll('input[type="number"]').forEach(input => {
+			rowData[input.name] = input.value;
+		});
+		tableRows.push(rowData);
+	});
+
+	return {
+		exportDate: new Date().toISOString(),
+		version: '1.1',
+		parameters: params,
+		tableRows,
+		collapsibleStates: collectCollapsibleStates()
+	};
+}
+
+function queuePlannerStateCacheSave() {
+	if (isApplyingCachedState) return;
+
+	if (plannerCacheSaveTimeoutId) {
+		clearTimeout(plannerCacheSaveTimeoutId);
+	}
+
+	plannerCacheSaveTimeoutId = setTimeout(() => {
+		savePlannerStateToCache();
+	}, CACHE_SAVE_DEBOUNCE_MS);
+}
+
+function savePlannerStateToCache() {
+	if (isApplyingCachedState) return;
+
+	try {
+		const snapshot = collectPlannerDataSnapshot();
+		localStorage.setItem(PLANNER_CACHE_KEY, JSON.stringify(snapshot));
+	} catch (error) {
+		console.warn('Could not persist planner state cache:', error);
+	}
+}
+
+function loadPlannerStateFromCache() {
+	try {
+		const cachedData = localStorage.getItem(PLANNER_CACHE_KEY);
+		if (!cachedData) return false;
+
+		const parsedData = JSON.parse(cachedData);
+		const wasApplied = applyImportedPlannerData(parsedData, { showSuccessAlert: false, source: 'cache' });
+		if (wasApplied) {
+			console.log('Loaded planner state from local cache');
+			queuePlannerStateCacheSave();
+		}
+		return wasApplied;
+	} catch (error) {
+		console.warn('Could not load planner state cache:', error);
+		return false;
+	}
+}
+
+function setupPlannerStateCacheListeners() {
+	if (cacheListenersSetup) return;
+
+	const cacheInputHandler = event => {
+		if (isApplyingCachedState) return;
+
+		const target = event.target;
+		if (!(target instanceof HTMLElement)) return;
+		if (!target.matches('input, select, textarea')) return;
+		if (target.id === 'jsonFileInput') return;
+
+		queuePlannerStateCacheSave();
+	};
+
+	document.addEventListener('input', cacheInputHandler, true);
+	document.addEventListener('change', cacheInputHandler, true);
+
+	cacheListenersSetup = true;
+}
+
+function resetPlannerState() {
+	if (!confirm('Weet je zeker dat je alles wil resetten? De achtergrondkleur blijft behouden.')) return;
+
+	// Preserve the current background color before clearing everything
+	const currentBgColor = normalizeHexColor(
+		document.querySelector('input[name="backgroundColor"]')?.value
+	) || DEFAULT_BACKGROUND_COLOR;
+
+	// Clear the cache entirely
+	try {
+		localStorage.removeItem(PLANNER_CACHE_KEY);
+	} catch (e) {
+		console.warn('Could not clear planner cache:', e);
+	}
+
+	isApplyingCachedState = true;
+	try {
+		// Reset text/date/time/select fields
+		document.querySelector('input[name="duiker"]').value = '';
+		document.querySelector('input[name="duiklocatie"]').value = '';
+		document.querySelector('input[name="datum"]').value = '';
+		document.querySelector('input[name="kentering"]').value = '';
+		document.querySelector('select[name="type"]').value = 'LW';
+
+		const duikvensterVanInput = document.querySelector('input[name="duikvensterVan"]');
+		const duikvensterTotInput = document.querySelector('input[name="duikvensterTot"]');
+		if (duikvensterVanInput && duikvensterTotInput) {
+			duikvensterVanInput.value = '';
+			duikvensterTotInput.value = '';
+			duikvensterVanInput.dataset.manualEdit = 'false';
+			duikvensterTotInput.dataset.manualEdit = 'false';
+		}
+
+		// Reset parameters to defaults
+		document.querySelector('input[name="airConsumption_preset"]').value = '21';
+		document.querySelector('input[name="Flesinhoud"]').value = '10';
+		document.querySelector('input[name="Flesdruk"]').value = '280';
+		document.querySelector('input[name="MOD"]').value = '0';
+		document.querySelector('input[name="EANx"]').value = '21';
+		document.querySelector('input[name="usingReel"]').checked = false;
+
+		// Uncheck all risk factors
+		document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]').forEach(cb => {
+			cb.checked = false;
+		});
+		updateRiskFactorsSelection();
+
+		// Reset table: keep only the first row and clear its values
+		const tableBody = document.getElementById('tableBody');
+		const rows = tableBody.querySelectorAll('tr');
+		for (let i = rows.length - 1; i > 0; i--) {
+			rows[i].remove();
+		}
+		const firstRow = tableBody.querySelector('tr');
+		if (firstRow) {
+			firstRow.querySelectorAll('input[type="number"]').forEach(input => {
+				input.value = '';
+			});
+		}
+		rowCounter = 1;
+		updateRowNumbers();
+
+		// Restore the saved background color (do NOT reset it)
+		applyBackgroundColor(currentBgColor);
+		if (backgroundColorPicker) {
+			backgroundColorPicker.setColor(currentBgColor);
+		}
+		const backgroundColorInput = document.querySelector('input[name="backgroundColor"]');
+		if (backgroundColorInput) {
+			backgroundColorInput.value = currentBgColor;
+		}
+
+		// Re-expand all collapsible sections
+		document.querySelectorAll('.collapsible[data-expanded-display]').forEach(header => {
+			const contentWrapper = header.nextElementSibling;
+			if (!contentWrapper) return;
+			header.classList.remove('collapsed');
+			contentWrapper.style.display = header.dataset.expandedDisplay || 'block';
+		});
+
+		// Recalculate everything
+		handleInputChange();
+		updateMetrics();
+		updateChart();
+		updateAirConsumption();
+		updateRemainingPressure();
+		updateNultijdAndGroup();
+		calculateEAD();
+		calculatepO2();
+	} finally {
+		isApplyingCachedState = false;
+	}
+
+	// Save the clean state (with background color) to cache
+	queuePlannerStateCacheSave();
 }
 
 let presetsListenersSetup = false;
@@ -1473,51 +1962,13 @@ function PresetsAddEventListeners(){
 
 // Export table data and parameters to JSON
 function exportToJSON() {
-	// Collect all parameters
-	const params = {
-		duiker: document.querySelector('input[name="duiker"]').value,
-		duiklocatie: document.querySelector('input[name="duiklocatie"]').value,
-		datum: document.querySelector('input[name="datum"]').value,
-		kentering: document.querySelector('input[name="kentering"]').value,
-		type: document.querySelector('select[name="type"]').value,
-		duikvensterVan: document.querySelector('input[name="duikvensterVan"]')?.value || '',
-		duikvensterTot: document.querySelector('input[name="duikvensterTot"]')?.value || '',
-		backgroundColor: normalizeHexColor(document.querySelector('input[name="backgroundColor"]')?.value) || DEFAULT_BACKGROUND_COLOR,
-		airConsumption_preset: document.querySelector('input[name="airConsumption_preset"]').value,
-		Flesinhoud: document.querySelector('input[name="Flesinhoud"]').value,
-		Flesdruk: document.querySelector('input[name="Flesdruk"]').value,
-		MOD: document.querySelector('input[name="MOD"]').value,
-		EANx: document.querySelector('input[name="EANx"]').value,
-		usingReel: document.querySelector('input[name="usingReel"]').checked,
-		riskFactors: []
-	};
+	const exportData = collectPlannerDataSnapshot();
+	if (!exportData || !exportData.parameters || !exportData.tableRows) {
+		alert('Er is geen geldige data om te exporteren.');
+		return;
+	}
 
-	// Collect selected risk factors
-	const riskCheckboxes = document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]');
-	riskCheckboxes.forEach(checkbox => {
-		if (checkbox.checked) {
-			params.riskFactors.push(checkbox.value);
-		}
-	});
-
-	// Collect all table rows
-	const tableRows = [];
-	document.querySelectorAll('#tableBody tr').forEach(row => {
-		const rowData = {};
-		row.querySelectorAll('input[type="number"]').forEach((input, index) => {
-			const fieldName = input.name;
-			rowData[fieldName] = input.value;
-		});
-		tableRows.push(rowData);
-	});
-
-	// Create the export object
-	const exportData = {
-		exportDate: new Date().toISOString(),
-		version: '1.0',
-		parameters: params,
-		tableRows: tableRows
-	};
+	const params = exportData.parameters;
 
 	// Create and download the JSON file
 	const dataStr = JSON.stringify(exportData, null, 2);
@@ -1834,6 +2285,117 @@ async function exportToPDF() {
 }
 
 // Import table data and parameters from JSON
+function applyImportedPlannerData(importData, options = {}) {
+	const showSuccessAlert = options.showSuccessAlert === true;
+	const source = options.source || 'import';
+
+	if (!importData || !importData.parameters || !Array.isArray(importData.tableRows)) {
+		if (source === 'import') {
+			alert('Invalid file format. Please use a file exported from Duikplanner.');
+		}
+		return false;
+	}
+
+	isApplyingCachedState = true;
+
+	try {
+		const params = importData.parameters;
+		document.querySelector('input[name="duiker"]').value = params.duiker || '';
+		document.querySelector('input[name="duiklocatie"]').value = params.duiklocatie || '';
+		document.querySelector('input[name="datum"]').value = params.datum || '';
+		document.querySelector('input[name="kentering"]').value = params.kentering || '';
+		document.querySelector('select[name="type"]').value = params.type || 'LW';
+
+		const duikvensterVanInput = document.querySelector('input[name="duikvensterVan"]');
+		const duikvensterTotInput = document.querySelector('input[name="duikvensterTot"]');
+		if (duikvensterVanInput && duikvensterTotInput) {
+			duikvensterVanInput.value = params.duikvensterVan || '';
+			duikvensterTotInput.value = params.duikvensterTot || '';
+			if (params.duikvensterVan && params.duikvensterTot) {
+				duikvensterVanInput.dataset.manualEdit = 'true';
+				duikvensterTotInput.dataset.manualEdit = 'true';
+			} else {
+				duikvensterVanInput.dataset.manualEdit = 'false';
+				duikvensterTotInput.dataset.manualEdit = 'false';
+				setDuikvensterFromKentering(true);
+			}
+		}
+
+		const importBackgroundColor = normalizeHexColor(params.backgroundColor) || DEFAULT_BACKGROUND_COLOR;
+		applyBackgroundColor(importBackgroundColor);
+		if (backgroundColorPicker) {
+			backgroundColorPicker.setColor(importBackgroundColor);
+		}
+
+		document.querySelector('input[name="airConsumption_preset"]').value = params.airConsumption_preset || '21';
+		document.querySelector('input[name="Flesinhoud"]').value = params.Flesinhoud || '10';
+		document.querySelector('input[name="Flesdruk"]').value = params.Flesdruk || '280';
+		document.querySelector('input[name="MOD"]').value = params.MOD || '0';
+		document.querySelector('input[name="EANx"]').value = params.EANx || '21';
+		document.querySelector('input[name="usingReel"]').checked = params.usingReel || false;
+
+		const riskCheckboxes = document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]');
+		riskCheckboxes.forEach(checkbox => {
+			checkbox.checked = params.riskFactors && params.riskFactors.includes(checkbox.value);
+		});
+		updateRiskFactorsSelection();
+
+		const tableBody = document.getElementById('tableBody');
+		const rows = tableBody.querySelectorAll('tr');
+		for (let i = rows.length - 1; i > 0; i--) {
+			rows[i].remove();
+		}
+
+		const tableRows = importData.tableRows;
+		if (tableRows.length > 0) {
+			const firstRow = tableBody.querySelector('tr');
+			const firstRowData = tableRows[0];
+			firstRow.querySelectorAll('input[type="number"]').forEach(input => {
+				if (firstRowData[input.name] !== undefined) {
+					input.value = firstRowData[input.name];
+				}
+			});
+
+			for (let i = 1; i < tableRows.length; i++) {
+				addRow();
+				const newRow = tableBody.querySelector('tr:last-child');
+				const rowData = tableRows[i];
+				newRow.querySelectorAll('input[type="number"]').forEach(input => {
+					if (rowData[input.name] !== undefined) {
+						input.value = rowData[input.name];
+					}
+				});
+			}
+		}
+
+		updateRowNumbers();
+		applyCollapsibleStates(importData.collapsibleStates);
+
+		handleInputChange();
+		updateMetrics();
+		updateChart();
+		updateAirConsumption();
+		updateRemainingPressure();
+		updateNultijdAndGroup();
+		calculateEAD();
+		calculatepO2();
+
+		if (showSuccessAlert) {
+			alert('Data imported successfully!');
+		}
+
+		return true;
+	} catch (error) {
+		console.error('Error applying imported planner data:', error);
+		if (source === 'import') {
+			alert('Error importing file: ' + error.message);
+		}
+		return false;
+	} finally {
+		isApplyingCachedState = false;
+	}
+}
+
 function handleJSONImport(event) {
 	const file = event.target.files[0];
 	if (!file) return;
@@ -1842,97 +2404,10 @@ function handleJSONImport(event) {
 	reader.onload = function(e) {
 		try {
 			const importData = JSON.parse(e.target.result);
-
-			// Validate the import data
-			if (!importData.parameters || !importData.tableRows) {
-				alert('Invalid file format. Please use a file exported from Duikplanner.');
-				return;
+			const wasApplied = applyImportedPlannerData(importData, { showSuccessAlert: true, source: 'import' });
+			if (wasApplied) {
+				queuePlannerStateCacheSave();
 			}
-
-			// Import parameters
-			const params = importData.parameters;
-			document.querySelector('input[name="duiker"]').value = params.duiker || '';
-			document.querySelector('input[name="duiklocatie"]').value = params.duiklocatie || '';
-			document.querySelector('input[name="datum"]').value = params.datum || '';
-			document.querySelector('input[name="kentering"]').value = params.kentering || '';
-			document.querySelector('select[name="type"]').value = params.type || 'LW';
-			const duikvensterVanInput = document.querySelector('input[name="duikvensterVan"]');
-			const duikvensterTotInput = document.querySelector('input[name="duikvensterTot"]');
-			if (duikvensterVanInput && duikvensterTotInput) {
-				duikvensterVanInput.value = params.duikvensterVan || '';
-				duikvensterTotInput.value = params.duikvensterTot || '';
-				if (params.duikvensterVan && params.duikvensterTot) {
-					duikvensterVanInput.dataset.manualEdit = 'true';
-					duikvensterTotInput.dataset.manualEdit = 'true';
-				} else {
-					duikvensterVanInput.dataset.manualEdit = 'false';
-					duikvensterTotInput.dataset.manualEdit = 'false';
-					setDuikvensterFromKentering(true);
-				}
-			}
-			const importBackgroundColor = normalizeHexColor(params.backgroundColor) || DEFAULT_BACKGROUND_COLOR;
-			applyBackgroundColor(importBackgroundColor);
-			if (backgroundColorPicker) {
-				backgroundColorPicker.setColor(importBackgroundColor);
-			}
-			document.querySelector('input[name="airConsumption_preset"]').value = params.airConsumption_preset || '21';
-			document.querySelector('input[name="Flesinhoud"]').value = params.Flesinhoud || '10';
-			document.querySelector('input[name="Flesdruk"]').value = params.Flesdruk || '280';
-			document.querySelector('input[name="MOD"]').value = params.MOD || '0';
-			document.querySelector('input[name="EANx"]').value = params.EANx || '21';
-			document.querySelector('input[name="usingReel"]').checked = params.usingReel || false;
-
-			// Import risk factors
-			const riskCheckboxes = document.querySelectorAll('#riskFactorsMultiselect input[type="checkbox"]');
-			riskCheckboxes.forEach(checkbox => {
-				checkbox.checked = params.riskFactors && params.riskFactors.includes(checkbox.value);
-			});
-			// Update the multiselect display
-			updateRiskFactorsSelection();
-
-			// Clear existing table rows (except the first one)
-			const tableBody = document.getElementById('tableBody');
-			const rows = tableBody.querySelectorAll('tr');
-			for (let i = rows.length - 1; i > 0; i--) {
-				rows[i].remove();
-			}
-
-			// Import table rows
-			const tableRows = importData.tableRows;
-			if (tableRows.length > 0) {
-				// Update the first row with the first imported data
-				const firstRow = tableBody.querySelector('tr');
-				const firstRowData = tableRows[0];
-				firstRow.querySelectorAll('input[type="number"]').forEach(input => {
-					if (firstRowData[input.name] !== undefined) {
-						input.value = firstRowData[input.name];
-					}
-				});
-
-				// Add additional rows if needed
-				for (let i = 1; i < tableRows.length; i++) {
-					addRow();
-					const newRow = tableBody.querySelector('tr:last-child');
-					const rowData = tableRows[i];
-					newRow.querySelectorAll('input[type="number"]').forEach(input => {
-						if (rowData[input.name] !== undefined) {
-							input.value = rowData[input.name];
-						}
-					});
-				}
-			}
-
-			// Trigger updates
-			handleInputChange();
-			updateMetrics();
-			updateChart();
-			updateAirConsumption();
-			updateRemainingPressure();
-			updateNultijdAndGroup();
-			calculateEAD();
-			calculatepO2();
-
-			alert('Data imported successfully!');
 		} catch (error) {
 			console.error('Error importing JSON:', error);
 			alert('Error importing file: ' + error.message);
