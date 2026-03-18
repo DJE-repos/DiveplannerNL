@@ -147,19 +147,21 @@
 
 		const baseHsl = rgbToHsl(baseRgb.r, baseRgb.g, baseRgb.b);
 		const accentSaturation = clampNumber(Math.max(baseHsl.s + 20, 44), 42, 88);
-		const accentLightness = clampNumber(baseHsl.l > 62 ? baseHsl.l - 24 : 46, 34, 56);
+		// Scale lightness bounds upward for light backgrounds so tones stay in the same range as the background
+		const lightnessBias = Math.max(0, Math.round((baseHsl.l - 62) * 0.55));
+		const accentLightness = clampNumber(baseHsl.l > 62 ? baseHsl.l - 24 : 46, 34, 56 + lightnessBias);
 
 		const accent = hslToHex(baseHsl.h, accentSaturation, accentLightness);
-		const accentStrong = hslToHex(baseHsl.h, clampNumber(accentSaturation + 8, 48, 94), clampNumber(accentLightness - 12, 24, 44));
+		const accentStrong = hslToHex(baseHsl.h, clampNumber(accentSaturation + 8, 48, 94), clampNumber(accentLightness - 12, 24, 44 + lightnessBias));
 		const accentSoft = hslToHex(baseHsl.h, clampNumber(accentSaturation - 16, 18, 72), clampNumber(accentLightness + 28, 68, 90));
 		const accentMuted = hslToHex(baseHsl.h, clampNumber(accentSaturation - 28, 10, 60), 95);
-		const heading = hslToHex(baseHsl.h, clampNumber(accentSaturation - 6, 24, 82), clampNumber(accentLightness - 6, 28, 46));
+		const heading = hslToHex(baseHsl.h, clampNumber(accentSaturation - 6, 24, 82), clampNumber(accentLightness - 6, 28, 46 + Math.round(lightnessBias * 0.5)));
 		const text = hslToHex(baseHsl.h, 22, 24);
 		const textMuted = hslToHex(baseHsl.h, 10, 42);
 		const border = hslToHex(baseHsl.h, 26, 84);
 		const buttonText = getContrastTextColor(accentStrong);
-		const attention = hslToHex(baseHsl.h, clampNumber(accentSaturation + 4, 46, 92), clampNumber(accentLightness - 6, 28, 46));
-		const attentionStrong = hslToHex(baseHsl.h, clampNumber(accentSaturation + 10, 50, 95), clampNumber(accentLightness - 18, 20, 38));
+		const attention = hslToHex(baseHsl.h, clampNumber(accentSaturation + 4, 46, 92), clampNumber(accentLightness - 6, 28, 46 + lightnessBias));
+		const attentionStrong = hslToHex(baseHsl.h, clampNumber(accentSaturation + 10, 50, 95), clampNumber(accentLightness - 18, 20, 38 + lightnessBias));
 
 		const accentRgb = hexToRgb(accent);
 		const accentStrongRgb = hexToRgb(accentStrong);
