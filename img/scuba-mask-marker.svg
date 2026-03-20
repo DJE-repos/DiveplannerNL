@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" role="img" aria-labelledby="title desc">
+  <title id="title">Scuba mask marker</title>
+  <desc id="desc">Map marker shaped icon with a scuba mask.</desc>
+
+  <defs>
+    <linearGradient id="badgeGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2f8cf0"/>
+      <stop offset="100%" stop-color="#1b5fc4"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#102847" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <path d="M24 62 L15 44 H33 Z" fill="#1b5fc4" filter="url(#shadow)"/>
+  <circle cx="24" cy="24" r="20" fill="url(#badgeGradient)" stroke="#ffffff" stroke-width="2.5" filter="url(#shadow)"/>
+
+  <rect x="10" y="18" width="28" height="15" rx="6" fill="#8fc7ff" stroke="#ffffff" stroke-width="2"/>
+  <rect x="13" y="20.5" width="10" height="10" rx="3" fill="#173459" opacity="0.82"/>
+  <rect x="25" y="20.5" width="10" height="10" rx="3" fill="#173459" opacity="0.82"/>
+  <rect x="22.5" y="23" width="3" height="5" rx="1.2" fill="#ffffff" opacity="0.9"/>
+
+  <path d="M9 22.5 H6.5 C5.3 22.5 4.4 23.4 4.4 24.6 V27" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M39 22.5 H41.5 C42.7 22.5 43.6 23.4 43.6 24.6 V27" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+
+  <path d="M17 33.5 V36.5 C17 40.4 20.1 43.5 24 43.5 C27.9 43.5 31 40.4 31 36.5 V33.5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+</svg>

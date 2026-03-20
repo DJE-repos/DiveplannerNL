@@ -1,0 +1,37 @@
+{
+    "32: zeelandbrug pijler 1": {
+        "coordinaat": [
+            3.913918,
+            51.62864
+        ],
+        "link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/znp1?pd=-0.5;2"
+    },
+    "32: zeelandbrug pijler 2": {
+        "coordinaat": [
+            3.913103,
+            51.62827
+        ],
+        "link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/znp2?pd=-0.5;2"
+    },
+    "79: Strijenham": {
+        "coordinaat": [
+            4.141773,
+            51.52052
+        ],
+        "link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/strd?pd=-0.5;2"
+    },
+    "79a: Dicky's place": {
+        "coordinaat": [
+            4.111295,
+            51.52357
+        ],
+        "link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/strd?pd=-0.5;2"
+    },
+    "80: vuilnisbelt": {
+        "coordinaat": [
+            4.093899,
+            51.52419
+        ],
+        "link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/vlblt?pd=-0.5;2"
+    }
+}

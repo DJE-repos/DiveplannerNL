@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Over Duikplanner</title>
     <link rel="stylesheet" href="css/style.css">
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
 </head>
 <body>
     <header class="site-nav">
@@ -31,6 +37,21 @@ temperatuur en getijde: <a href="https://waterinfo.rws.nl/publiek/astronomische-
         </section>
 
         <section class="info-card">
+            <h2>OpenStreetMap Oosterschelde</h2>
+            <p>Pins worden geladen uit het duiklocatiebestand. Klik op een pin en open de link in een nieuw tabblad.</p>
+            <div class="iframe-map-wrap">
+                <div id="osmDiveMap" class="osm-map" aria-label="Kaart met duiklocaties"></div>
+            </div>
+            <p class="map-attribution-note">
+                Kaartdata en tegels: ©
+                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>
+                (ODbL), conform
+                <a href="https://osm.wiki/Blocked" target="_blank" rel="noopener noreferrer">OSM tile usage policy</a>.
+            </p>
+            <p><a href="https://www.openstreetmap.org/?bbox=3.574785944268058%2C51.4338365096352%2C4.362709738530668%2C51.74483914516523" target="_blank" rel="noopener noreferrer">Open grotere OpenStreetMap kaart</a></p>
+        </section>
+
+        <section class="info-card">
             <h2>Wat je op de plannerpagina kunt doen</h2>
             <ul>
                 <li>Duikgegevens invullen zoals locatie, datum en kentering.</li>
@@ -47,5 +68,10 @@ temperatuur en getijde: <a href="https://waterinfo.rws.nl/publiek/astronomische-
     </main>
 
     <script type="text/javascript" src="js/menu.js"></script>
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+    <script type="text/javascript" src="js/about_map.js"></script>
 </body>
 </html>
