@@ -46,7 +46,7 @@
 
     const scubaMaskIcon = L.icon({
         iconUrl: 'img/scuba-mask-marker.svg',
-        iconSize: [48, 64],
+        iconSize: [24, 32],
         iconAnchor: [24, 62],
         popupAnchor: [0, -56]
     });
