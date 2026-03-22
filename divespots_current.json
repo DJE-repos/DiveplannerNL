@@ -72,6 +72,22 @@
 "75: Irenehoeve":{
 "coordinaat":[4.031957,51.60254],
 "link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/irhe?pd=-0.5;2"
+},
+"33a Havenhoofd west/kurkenol":{
+"coordinaat":[3.888943,51.63183],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/hfwk?pd=-0.5;2"
+},
+"34: Levensstrijd":{
+"coordinaat":[3.889269,51.64298],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/lvnsd?pd=-0.5;2"
+},
+"??: Wrakje de Boer/O'schelde gorishoek":{
+"coordinaat":[4.081479,51.52497],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/gh?pd=-0.5;2"
+},
+"78a/b: De Blokken/gorishoekse dijk":{
+"coordinaat":[4.076721,51.52455],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/ghdk?pd=-0.5;2"
 }
 
 }
