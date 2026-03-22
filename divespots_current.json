@@ -48,5 +48,26 @@
 "73: Sint Annaland":{
 "coordinaat":[4.103676,51.60978],
 "link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/stald?pd=-0.5;2"
+},
+"22: Zonneschijn":{
+"coordinaat":[4.065786,51.62918],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/znsn?pd=-0.5;2"
+},
+"26: Zoetersboud":{
+"coordinaat":[4.090558,51.64430],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/zobt?pd=-0.5;2"
+},
+"26/72: Zijpe midden":{
+"coordinaat":[4.094835,51.64360],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/zpmn?pd=-0.5;2"
+},
+"77: Stavenisse stijger":{
+"coordinaat":[4.006362,51.59603],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/stsgr?pd=-0.5;2"
+},
+"76: Stavenisse Oostnol":{
+"coordinaat":[4.019309,51.59903],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/ston?pd=-0.5;2"
 }
+
 }
