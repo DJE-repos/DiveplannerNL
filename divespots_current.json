@@ -44,5 +44,9 @@
 "68a: Wemeldinge de hoek":{
 "coordinaat":[3.989259,51.52478],
 "link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/dhoek?pd=-0.5;2"
+},
+"73: Sint Annaland":{
+"coordinaat":[4.103676,51.60978],
+"link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/stald?pd=-0.5;2"
 }
 }
