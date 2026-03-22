@@ -68,6 +68,10 @@
 "76: Stavenisse Oostnol":{
 "coordinaat":[4.019309,51.59903],
 "link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/ston?pd=-0.5;2"
+},
+"75: Irenehoeve":{
+"coordinaat":[4.031957,51.60254],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/irhe?pd=-0.5;2"
 }
 
 }
