@@ -128,5 +128,9 @@
 "49: Sophiahaven":{
 "coordinaat":[3.719909,51.59665],
 "link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/sphn?pd=-0.5;2"
+},
+"74: Quaack":{
+"coordinaat":[4.037963,51.60479],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/quack?pd=-0.5;2"
 }
 }
