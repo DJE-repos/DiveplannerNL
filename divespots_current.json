@@ -112,6 +112,21 @@
 "36: Kistersnol":{
 "coordinaat":[3.878693,51.65775],
 "link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/kstl?pd=-0.5;2"
+},
+"55: Colijnsplaat":{
+"coordinaat":[3.852207,51.60472],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/cpdl?pd=-0.5;2"
+},
+"53: Oesterputen":{
+"coordinaat":[3.797066,51.60548],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/oesp?pd=-0.5;2"
+},
+"51: Vlietepolder":{
+"coordinaat":[3.752278,51.59711],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/vlie?pd=-0.5;2"
+},
+"49: Sophiahaven":{
+"coordinaat":[3.719909,51.59665],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/sphn?pd=-0.5;2"
 }
-
 }
