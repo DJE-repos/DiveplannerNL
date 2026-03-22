@@ -33,5 +33,12 @@
             51.52419
         ],
         "link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/vlblt?pd=-0.5;2"
+    },
+    "44: Plompe toren": {
+        "coordinaat": [
+            3.782680,
+            51.68138
+],
+"link": "https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/pltn?pd=-0.5;2"
     }
 }
