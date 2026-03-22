@@ -88,6 +88,30 @@
 "78a/b: De Blokken/gorishoekse dijk":{
 "coordinaat":[4.076721,51.52455],
 "link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/ghdk?pd=-0.5;2"
+},
+"70: Wemeldinge Oost:{
+"coordinaat":[4.008133,51.52125],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/wdoo?pd=-0.5;2"
+},
+"74: Stortvak Wemeldinge West":{
+"coordinaat":[3.961893,51.53095],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/stvwemew?pd=-0.5;2"
+},
+"65a: Wemeldinge Groene Boei":{
+"coordinaat":[3.977707,51.52722],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/grb?pd=-0.5;2"
+},
+"57: Katshoek":{
+"coordinaat":[3.899655,51.56412],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/katsh?pd=-0.5;2"
+},
+"38: Flauwers":{
+"coordinaat":[3.847013,51.67599],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/flauw?pd=-0.5;2"
+},
+"36: Kistersnol":{
+"coordinaat":[3.878693,51.65775],
+"link":"https://rwsos.rws.nl/viewer/map/oosterschelde/stroming/location/kstl?pd=-0.5;2"
 }
 
 }
