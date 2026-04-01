@@ -1,6 +1,7 @@
 (() => {
 	const DEFAULT_BACKGROUND_COLOR = '#dde3fd';
 	const PLANNER_CACHE_KEY = 'duikplanner_state_v2';
+	const ABOUT_COLUMN_COLLAPSE_KEY = 'duikplanner_about_column_collapsed';
 
 	function normalizeHexColor(colorValue) {
 		if (typeof colorValue !== 'string') return null;
@@ -121,8 +122,15 @@
 		const rgbColor = hexToRgb(hexColor);
 		if (!rgbColor) return '#ffffff';
 
-		const brightness = (rgbColor.r * 299 + rgbColor.g * 587 + rgbColor.b * 114) / 1000;
-		return brightness > 150 ? '#152234' : '#ffffff';
+		const hslColor = rgbToHsl(rgbColor.r, rgbColor.g, rgbColor.b);
+		const isYellowTone = hslColor.h >= 42 && hslColor.h <= 74;
+
+		// Prefer white text on colored backgrounds, but switch to dark text for very light colors.
+		if (hslColor.l >= 74 || (isYellowTone && hslColor.l >= 58)) {
+			return '#152234';
+		}
+
+		return '#ffffff';
 	}
 
 	function getLighterHexColor(hexColor, lightenRatio = 0.82) {
@@ -159,9 +167,13 @@
 		const text = hslToHex(baseHsl.h, 22, 24);
 		const textMuted = hslToHex(baseHsl.h, 10, 42);
 		const border = hslToHex(baseHsl.h, 26, 84);
-		const buttonText = getContrastTextColor(accentStrong);
 		const attention = hslToHex(baseHsl.h, clampNumber(accentSaturation + 4, 46, 92), clampNumber(accentLightness - 6, 28, 46 + lightnessBias));
 		const attentionStrong = hslToHex(baseHsl.h, clampNumber(accentSaturation + 10, 50, 95), clampNumber(accentLightness - 18, 20, 38 + lightnessBias));
+		const onAccent = getContrastTextColor(accent);
+		const onAccentStrong = getContrastTextColor(accentStrong);
+		const onAccentSoft = getContrastTextColor(accentSoft);
+		const onAttention = getContrastTextColor(attention);
+		const onAttentionStrong = getContrastTextColor(attentionStrong);
 
 		const accentRgb = hexToRgb(accent);
 		const accentStrongRgb = hexToRgb(accentStrong);
@@ -176,7 +188,11 @@
 			text,
 			textMuted,
 			border,
-			buttonText,
+			onAccent,
+			onAccentStrong,
+			onAccentSoft,
+			onAttention,
+			onAttentionStrong,
 			attention,
 			attentionStrong,
 			accentRgb: `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`,
@@ -197,7 +213,12 @@
 		rootStyle.setProperty('--theme-text', themePalette.text);
 		rootStyle.setProperty('--theme-text-muted', themePalette.textMuted);
 		rootStyle.setProperty('--theme-border', themePalette.border);
-		rootStyle.setProperty('--theme-button-text', themePalette.buttonText);
+		rootStyle.setProperty('--theme-button-text', themePalette.onAccentStrong);
+		rootStyle.setProperty('--theme-on-accent', themePalette.onAccent);
+		rootStyle.setProperty('--theme-on-accent-strong', themePalette.onAccentStrong);
+		rootStyle.setProperty('--theme-on-accent-soft', themePalette.onAccentSoft);
+		rootStyle.setProperty('--theme-on-attention', themePalette.onAttention);
+		rootStyle.setProperty('--theme-on-attention-strong', themePalette.onAttentionStrong);
 		rootStyle.setProperty('--theme-attention', themePalette.attention);
 		rootStyle.setProperty('--theme-attention-strong', themePalette.attentionStrong);
 		rootStyle.setProperty('--theme-accent-rgb', themePalette.accentRgb);
@@ -294,8 +315,48 @@
 		});
 	}
 
+	function setupAboutColumnToggle() {
+		const toggleButton = document.getElementById('toggleAboutColumnBtn');
+		if (!toggleButton) {
+			return;
+		}
+
+		const mediaQuery = window.matchMedia('(min-width: 1024px)');
+
+		const applyCollapsedState = (collapsed) => {
+			document.body.classList.toggle('about-collapsed', collapsed);
+			toggleButton.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+			toggleButton.setAttribute('aria-label', collapsed ? 'Toon info-kolom' : 'Verberg info-kolom');
+			toggleButton.setAttribute('title', collapsed ? 'Toon info-kolom' : 'Verberg info-kolom');
+		};
+
+		const cachedCollapsed = localStorage.getItem(ABOUT_COLUMN_COLLAPSE_KEY) === 'true';
+		if (mediaQuery.matches) {
+			applyCollapsedState(cachedCollapsed);
+		} else {
+			applyCollapsedState(false);
+		}
+
+		toggleButton.addEventListener('click', () => {
+			const nextCollapsed = !document.body.classList.contains('about-collapsed');
+			applyCollapsedState(nextCollapsed);
+			localStorage.setItem(ABOUT_COLUMN_COLLAPSE_KEY, String(nextCollapsed));
+		});
+
+		mediaQuery.addEventListener('change', event => {
+			if (!event.matches) {
+				applyCollapsedState(false);
+				return;
+			}
+
+			const shouldCollapse = localStorage.getItem(ABOUT_COLUMN_COLLAPSE_KEY) === 'true';
+			applyCollapsedState(shouldCollapse);
+		});
+	}
+
 	document.addEventListener('DOMContentLoaded', () => {
 		applyBackgroundTheme(getCachedBackgroundColor());
 		setupMenuToggle();
+		setupAboutColumnToggle();
 	});
 })();

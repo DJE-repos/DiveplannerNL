@@ -1097,9 +1097,9 @@ function addRow(time=0, depth=0) {
 	actionsCell.className = 'actions';
 	actionsCell.innerHTML = `
 		<div class="move-buttons">
-			<button class="btn btn-move" onclick="moveRowUp(this)" title="Move Up">↑</button>
-			<button class="btn btn-move" onclick="moveRowDown(this)" title="Move Down">↓</button>
-			<button class="btn btn-danger" onclick="deleteRow(this)">🗑️</button>
+			<button class="btn btn-move btn-icon-only" onclick="moveRowUp(this)" title="Rij omhoog" aria-label="Rij omhoog"><svg class="btn-icon" aria-hidden="true"><use href="#icon-chevron-up"></use></svg></button>
+			<button class="btn btn-move btn-icon-only" onclick="moveRowDown(this)" title="Rij omlaag" aria-label="Rij omlaag"><svg class="btn-icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg></button>
+			<button class="btn btn-danger btn-icon-only" onclick="deleteRow(this)" title="Verwijder rij" aria-label="Verwijder rij"><svg class="btn-icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>
 		</div>
 	`;
 	newRow.appendChild(actionsCell);

@@ -1,9 +1,9 @@
 (() => {
-    const mapContainer = document.getElementById('osmDiveMap');
-
-    if (!mapContainer || typeof L === 'undefined') {
+    if (typeof L === 'undefined') {
         return;
     }
+
+    let mapInstance = null;
 
     const bboxWest = 3.574785944268058;
     const bboxSouth = 51.4338365096352;
@@ -14,35 +14,6 @@
         [bboxSouth, bboxWest],
         [bboxNorth, bboxEast]
     );
-
-    const map = L.map(mapContainer, {
-        zoomControl: true,
-        minZoom: 9,
-        maxZoom: 18
-    });
-
-    const tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
-        referrerPolicy: 'strict-origin-when-cross-origin'
-    });
-
-    tileLayer.addTo(map);
-
-    let hasTileWarning = false;
-    tileLayer.on('tileerror', () => {
-        if (hasTileWarning) {
-            return;
-        }
-
-        hasTileWarning = true;
-        const warning = document.createElement('p');
-        warning.className = 'map-error-note';
-        warning.textContent = 'OSM-tegels konden niet worden geladen. Open deze pagina via http(s) in een normale browser zodat een Referer-header wordt meegestuurd.';
-        mapContainer.insertAdjacentElement('afterend', warning);
-    });
-
-    map.fitBounds(osBounds, { padding: [12, 12] });
 
     const scubaMaskIcon = L.icon({
         iconUrl: 'img/scuba-mask-marker.svg',
@@ -73,7 +44,7 @@
         return trimmed;
     }
 
-    function addDiveSpotMarkers(data) {
+    function addDiveSpotMarkers(map, data) {
         if (!data || typeof data !== 'object') {
             return;
         }
@@ -101,17 +72,81 @@
         });
     }
 
-    fetch('divespots_current.json')
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Kon duiklocaties niet laden (HTTP ${response.status})`);
-            }
-            return response.json();
-        })
-        .then((data) => {
-            addDiveSpotMarkers(data);
-        })
-        .catch((error) => {
-            console.error(error);
+    function createMap(mapContainer) {
+        const map = L.map(mapContainer, {
+            zoomControl: true,
+            minZoom: 9,
+            maxZoom: 18
         });
+
+        const tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
+            referrerPolicy: 'strict-origin-when-cross-origin'
+        });
+
+        tileLayer.addTo(map);
+
+        let hasTileWarning = false;
+        tileLayer.on('tileerror', () => {
+            if (hasTileWarning) {
+                return;
+            }
+
+            hasTileWarning = true;
+            const warning = document.createElement('p');
+            warning.className = 'map-error-note';
+            warning.textContent = 'OSM-tegels konden niet worden geladen. Open deze pagina via http(s) in een normale browser zodat een Referer-header wordt meegestuurd.';
+            mapContainer.insertAdjacentElement('afterend', warning);
+        });
+
+        map.fitBounds(osBounds, { padding: [12, 12] });
+
+        fetch('divespots_current.json')
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Kon duiklocaties niet laden (HTTP ${response.status})`);
+                }
+                return response.json();
+            })
+            .then((data) => {
+                addDiveSpotMarkers(map, data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        return map;
+    }
+
+    function ensureDiveMap(preferredContainerId) {
+        if (mapInstance) {
+            mapInstance.invalidateSize();
+            return mapInstance;
+        }
+
+        const fallbackContainer = document.getElementById('osmDiveMap');
+        const targetContainer = preferredContainerId
+            ? document.getElementById(preferredContainerId)
+            : null;
+        const mapContainer = targetContainer || fallbackContainer;
+
+        if (!mapContainer) {
+            return null;
+        }
+
+        mapInstance = createMap(mapContainer);
+        return mapInstance;
+    }
+
+    function invalidateDiveMap() {
+        if (mapInstance) {
+            mapInstance.invalidateSize();
+        }
+    }
+
+    window.ensureDiveMap = ensureDiveMap;
+    window.invalidateDiveMap = invalidateDiveMap;
+
+    ensureDiveMap();
 })();

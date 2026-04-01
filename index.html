@@ -3,20 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤿 Duikplanner</title>
+    <title>Duikplanner</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css">
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
     
 </head>
 <body>
+    <svg class="icon-sprite" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute; width:0; height:0; overflow:hidden;">
+        <symbol id="icon-trash" viewBox="0 0 24 24">
+            <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6 6l1 14h10l1-14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M10 10v7M14 10v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="icon-map" viewBox="0 0 24 24">
+            <path d="M9 4l6 2 6-2v16l-6 2-6-2-6 2V6l6-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M9 4v16M15 6v16" fill="none" stroke="currentColor" stroke-width="2"/>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24">
+            <path d="M12 16V4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24">
+            <path d="M12 4v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 12l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="icon-file" viewBox="0 0 24 24">
+            <path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M14 3v6h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M9 14h6M9 18h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="icon-chevron-up" viewBox="0 0 24 24">
+            <path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="icon-layout-toggle" viewBox="0 0 24 24">
+            <path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 5v14" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M16 9l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+    </svg>
+
     <header class="site-nav">
         <div class="site-nav-bar">
             <div class="site-brand-group">
-                <a class="site-brand" href="index.html">🤿 Duikplanner</a>
+                <a class="site-brand" href="index.html">🤿 <span>Duikplanner</span></a>
                 <span id="nitroxBadge" class="nitrox-badge" style="display: none;">NITROX EAN21%</span>
             </div>
             <div class="site-nav-right">
-                <button id="resetPlannerBtn" class="header-btn header-btn--reset nav-reset-btn" type="button">🗑️ reset</button>
+                <button id="resetPlannerBtn" class="header-btn header-btn--reset nav-reset-btn btn-icon-only" type="button" aria-label="Reset planner" title="Reset planner"><svg class="btn-icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>
+                <button id="openMapOverlayBtn" class="header-btn nav-map-btn btn-icon-only" type="button" aria-haspopup="dialog" aria-controls="mapOverlay" aria-label="Open kaart" title="Open kaart"><svg class="btn-icon" aria-hidden="true"><use href="#icon-map"></use></svg></button>
+                <button id="toggleAboutColumnBtn" class="header-btn nav-layout-btn btn-icon-only desktop-only" type="button" aria-controls="aboutPlanner" aria-pressed="false" aria-label="Verberg info-kolom" title="Verberg info-kolom"><svg class="btn-icon" aria-hidden="true"><use href="#icon-layout-toggle"></use></svg></button>
                 <button id="menuToggle" class="hamburger-btn" type="button" aria-expanded="false" aria-controls="siteMenu" aria-label="Open navigatiemenu">
                     <span class="hamburger-line"></span>
                     <span class="hamburger-line"></span>
@@ -26,13 +75,12 @@
             <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
         </div>
         <nav id="siteMenu" class="site-menu" hidden>
-            <a href="index.html" class="site-menu-link" aria-current="page">Duikplanner</a>
-            <a href="#aboutPlanner" class="site-menu-link about-link-desktop">Over deze site</a>
-            <a href="about.html" class="site-menu-link about-link-mobile">Over deze site</a>
+            <a href="index.html" class="site-menu-link site-menu-link--primary-nav" aria-current="page">Duikplanner</a>
+            <a href="#aboutPlanner" class="site-menu-link site-menu-link--primary-nav">Over deze site</a>
             <div class="site-menu-actions">
-                <button id="jsonImportBtn" class="header-btn">📂 import</button>
-                <button id="jsonExportBtn" class="header-btn">💾 export</button>
-                <button id="pdfExportBtn" class="header-btn">📄 PDF</button>
+                <button id="jsonImportBtn" class="header-btn"><svg class="btn-icon" aria-hidden="true"><use href="#icon-upload"></use></svg><span>Import</span></button>
+                <button id="jsonExportBtn" class="header-btn"><svg class="btn-icon" aria-hidden="true"><use href="#icon-download"></use></svg><span>Export</span></button>
+                <button id="pdfExportBtn" class="header-btn"><svg class="btn-icon" aria-hidden="true"><use href="#icon-file"></use></svg><span>PDF</span></button>
                 <button id="backgroundColorControl" class="header-color-control" type="button" aria-label="Achtergrondkleur">BG
                     <span id="backgroundColorSwatch" class="header-color-swatch" aria-hidden="true"></span>
                 </button>
@@ -44,7 +92,7 @@
         <div class="planner-left-column">
             <div class="settings-section">
             <h3 class="collapsible" data-expanded-display="grid">
-                📝 Duik info <span class="collapse-arrow">▼</span> 
+                Duik info <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row">
                 <div class="input-group">
@@ -83,26 +131,26 @@
             </div>
             <div class="settings-section">
             <h3 class="collapsible" data-expanded-display="grid">
-                ⚙️ Duik parameters <span class="collapse-arrow">▼</span> 
+                Duik parameters <span class="collapse-arrow">▼</span> 
             </h3>
             <div class="settings-row parameters-row">
-                <div class="input-group">
+                <div class="input-group has-unit" data-unit="l/min">
                     <label for="airConsumption">Verbruik (l/min)</label>
                     <input type="number" name="airConsumption_preset" value="21" step="0.1" min="0">
 				</div>
-				<div class="input-group">
+                <div class="input-group has-unit" data-unit="l">
 					<label for="airConsumption">Flesinhoud (l)</label>
                     <input type="number" name="Flesinhoud" value="10" step="0.1" min="0">
 				</div>
-				<div class="input-group">
+                <div class="input-group has-unit" data-unit="bar">
 					<label for="airConsumption">Flesdruk (bar)</label>
 					<input type="number" name="Flesdruk" value="280" step="0.1" min="0">
                 </div>
-                <div class="input-group">
+                <div class="input-group has-unit" data-unit="m">
 					<label for="MOD">MDD (m)</label>
 					<input type="number" name="MOD" value="0" step="1" min="0">
                 </div>
-                <div class="input-group">
+                <div class="input-group has-unit" data-unit="%">
 					<label for="EANₓ">EANₓ (%)</label>
 					<input type="number" name="EANx" value="21" step="1" min="21">
                 </div>
@@ -155,13 +203,13 @@
             </div>
             <div class="chart-container">
             <h2 class="collapsible" data-expanded-display="block">
-                📈 Duikprofiel <span class="collapse-arrow">▼</span> 
+                Duikprofiel <span class="collapse-arrow">▼</span> 
             </h2>
             <canvas id="depthChart"></canvas>
             </div>
             <div class="chart-container">
             <h2 class="collapsible" data-expanded-display="block">
-                𝄜 Duiktabel <span class="collapse-arrow">▼</span>
+                Duiktabel <span class="collapse-arrow">▼</span>
             </h2>
             <div class="table-content-wrapper">
                 <div class="table-container">
@@ -189,9 +237,9 @@
                             <td><input type="number" name="remaining_pressure_val" class="readonly" value="0" placeholder="0" step=".5" readonly="readonly"></td>
                             <td class="actions">
                                 <div class="move-buttons">
-                                    <button class="btn btn-move" onclick="moveRowUp(this)" title="Move Up">↑</button>
-                                    <button class="btn btn-move" onclick="moveRowDown(this)" title="Move Down">↓</button>
-                                    <button class="btn btn-danger" onclick="deleteRow(this)">🗑️</button>
+                                    <button class="btn btn-move btn-icon-only" onclick="moveRowUp(this)" title="Rij omhoog" aria-label="Rij omhoog"><svg class="btn-icon" aria-hidden="true"><use href="#icon-chevron-up"></use></svg></button>
+                                    <button class="btn btn-move btn-icon-only" onclick="moveRowDown(this)" title="Rij omlaag" aria-label="Rij omlaag"><svg class="btn-icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg></button>
+                                    <button class="btn btn-danger btn-icon-only" onclick="deleteRow(this)" title="Verwijder rij" aria-label="Verwijder rij"><svg class="btn-icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>
                                 </div>
                             </td>
                         </tr>
@@ -199,9 +247,9 @@
                 </table>
             </div>
                 <div class="table-controls">
-                    <button class="btn btn-primary" onclick="addRow()">➕ Row</button>
-                    <button class="btn btn-primary" onclick="add2Rows()">➕ 2 Rows</button>
-                    <button class="btn btn-primary" onclick="addSafetyStop()">➕ Safety stop</button>
+                    <button class="btn btn-primary" onclick="addRow()"><svg class="btn-icon" aria-hidden="true"><use href="#icon-plus"></use></svg><span>Rij</span></button>
+                    <button class="btn btn-primary" onclick="add2Rows()"><svg class="btn-icon" aria-hidden="true"><use href="#icon-plus"></use></svg><span>2 rijen</span></button>
+                    <button class="btn btn-primary" onclick="addSafetyStop()"><svg class="btn-icon" aria-hidden="true"><use href="#icon-plus"></use></svg><span>Safety stop</span></button>
                 </div>
             </div>
             </div>
@@ -235,7 +283,7 @@
             </div>
             <div class="air-table-container">
             <h2 class="collapsible collapsed" data-expanded-display="block">
-                📊 Duiktabel (Table A) <span class="collapse-arrow">▼</span>
+                Duiktabel (Table A) <span class="collapse-arrow">▼</span>
             </h2>
             <div class="air-table-wrapper" style="display: none;">
                 <table id="airTableDisplay"></table>
@@ -273,11 +321,38 @@
             </section>
         </aside>
     </div>
+
+    <div id="mapOverlay" class="map-overlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mapOverlayTitle">
+        <div class="map-overlay-panel">
+            <div class="map-overlay-header">
+                <h2 id="mapOverlayTitle">Kaart Oosterschelde</h2>
+                <button id="closeMapOverlayBtn" class="header-btn map-overlay-close" type="button" aria-label="Sluit kaart">✕</button>
+            </div>
+            <p>Klik op een pin en open de link in een nieuw tabblad om naar de stromingstabel van RWS te gaan.</p>
+            <div class="iframe-map-wrap map-overlay-wrap">
+                <div id="osmDiveMapOverlay" class="osm-map" aria-label="Kaart met duiklocaties"></div>
+            </div>
+            <p class="map-attribution-note">
+                Kaartdata en tegels: ©
+                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>
+                (ODbL), conform
+                <a href="https://osm.wiki/Blocked" target="_blank" rel="noopener noreferrer">OSM tile usage policy</a>.
+            </p>
+            <p><a href="https://www.openstreetmap.org/?bbox=3.574785944268058%2C51.4338365096352%2C4.362709738530668%2C51.74483914516523" target="_blank" rel="noopener noreferrer">Open grotere OpenStreetMap kaart</a></p>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
     <script type="text/javascript" src="js/menu.js"></script>
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+    <script type="text/javascript" src="js/about_map.js"></script>
+    <script type="text/javascript" src="js/map_overlay.js"></script>
     <script type="text/javascript" src="js/air_planner.js"></script>
 </body>
 </html>
