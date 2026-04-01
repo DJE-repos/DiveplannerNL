@@ -134,6 +134,14 @@ body {
     color: var(--theme-heading);
 }
 
+.about-link-desktop {
+    display: none;
+}
+
+.about-link-mobile {
+    display: block;
+}
+
 .site-menu-actions {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -292,6 +300,26 @@ body {
     border-radius: 20px;
     padding: 30px;
     box-shadow: 0 20px 40px rgba(var(--theme-accent-rgb), 0.2);
+}
+
+.planner-layout {
+    display: block;
+}
+
+.planner-about-column {
+    display: none;
+}
+
+.planner-about-card {
+    padding: 18px;
+}
+
+.planner-about-card h2 {
+    font-size: 1.12rem;
+}
+
+.planner-about-card ul {
+    padding-left: 18px;
 }
 
 h1 {
@@ -926,6 +954,72 @@ tr:last-child td {
     margin-bottom: 30px;
 }
 
+@media (min-width: 1024px) {
+    .planner-layout {
+        max-width: 1600px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(300px, 360px) minmax(0, 1fr) 320px;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .about-link-desktop {
+        display: block;
+    }
+
+    .about-link-mobile {
+        display: none;
+    }
+
+    .planner-left-column,
+    .planner-about-column {
+        position: sticky;
+        top: 16px;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+        scrollbar-gutter: stable;
+        padding-right: 4px;
+    }
+
+    .planner-main-column {
+        min-width: 0;
+    }
+
+    .planner-left-column .settings-section {
+        margin-bottom: 16px;
+    }
+
+    .planner-left-column .settings-row {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-left-column .duikvenster-group {
+        grid-column: span 1;
+    }
+
+    .planner-left-column .parameters-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .planner-left-column .parameters-row .input-group:has(.multiselect) {
+        grid-column: span 2;
+    }
+
+    .planner-main-column .stats-grid-mini {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .planner-about-column {
+        display: grid;
+        gap: 14px;
+    }
+
+    .planner-about-column .info-card {
+        box-shadow: 0 8px 18px rgba(var(--theme-accent-rgb), 0.15);
+    }
+}
+
 .stat-card {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 15px;
@@ -951,6 +1045,7 @@ tr:last-child td {
 
 .stat-card.warning .stat-value {
     background: linear-gradient(45deg, #FF9500, #FF6B00);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -965,6 +1060,7 @@ tr:last-child td {
 
 .stat-card.warning-severe .stat-value {
     background: linear-gradient(45deg, #FF0000, #CC0000);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
