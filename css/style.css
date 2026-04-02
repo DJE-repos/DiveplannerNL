@@ -74,12 +74,6 @@ body {
     font-size: 1.28rem;
 }
 
-.brand-icon {
-    width: 20px;
-    height: 20px;
-    flex: 0 0 20px;
-}
-
 .hamburger-btn {
     display: inline-flex;
     flex-direction: column;
@@ -128,24 +122,6 @@ body {
 
 .site-menu[hidden] {
     display: none;
-}
-
-.site-menu-link {
-    color: var(--theme-heading);
-    text-decoration: none;
-    font-weight: 600;
-    border-radius: 8px;
-    padding: 10px 12px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.site-menu-link:hover {
-    background: var(--theme-accent-muted);
-}
-
-.site-menu-link[aria-current="page"] {
-    background: var(--theme-accent-soft);
-    color: var(--theme-heading);
 }
 
 .site-menu-actions {
@@ -398,11 +374,6 @@ body {
 
 .map-overlay-about-text {
     margin-bottom: 10px;
-}
-
-.map-overlay-about-text h3 {
-    margin: 0 0 8px;
-    color: var(--theme-heading);
 }
 
 body.map-overlay-open {
@@ -689,6 +660,11 @@ tr:last-child td {
     box-shadow: 0 8px 16px rgba(18, 36, 52, 0.07);
 }
 
+.chart-container--profile {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
 .chart-container h2 {
     text-align: left;
     color: var(--theme-heading);
@@ -706,7 +682,7 @@ tr:last-child td {
 	max-height: 70%;
     display: block;
     border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
 }
 
 .table-content-wrapper {
@@ -786,6 +762,11 @@ tr:last-child td {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
+    --unit-padding-right: 28px;
+}
+
+.input-group.has-unit[data-unit="l/min"] {
+    --unit-padding-right: 44px;
 }
 
 .input-group.has-unit::after {
@@ -805,7 +786,7 @@ tr:last-child td {
 .input-group.has-unit input[type="number"] {
     grid-column: 1;
     grid-row: 2;
-    padding-right: 28px;
+    padding-right: var(--unit-padding-right);
 }
 
 .input-group label {
@@ -1129,10 +1110,6 @@ tr:last-child td {
 
     .header-btn.nav-layout-btn {
         display: inline-flex;
-    }
-
-    .site-menu-link--primary-nav {
-        display: none;
     }
 
     .planner-layout {

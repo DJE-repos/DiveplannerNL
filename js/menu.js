@@ -309,10 +309,6 @@
 				closeMenu();
 			}
 		});
-
-		menu.querySelectorAll('a').forEach(link => {
-			link.addEventListener('click', closeMenu);
-		});
 	}
 
 	function setupAboutColumnToggle() {
