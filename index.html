@@ -75,8 +75,6 @@
             <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
         </div>
         <nav id="siteMenu" class="site-menu" hidden>
-            <a href="index.html" class="site-menu-link site-menu-link--primary-nav" aria-current="page">Duikplanner</a>
-            <a href="#aboutPlanner" class="site-menu-link site-menu-link--primary-nav">Over deze site</a>
             <div class="site-menu-actions">
                 <button id="jsonImportBtn" class="header-btn"><svg class="btn-icon" aria-hidden="true"><use href="#icon-upload"></use></svg><span>Import</span></button>
                 <button id="jsonExportBtn" class="header-btn"><svg class="btn-icon" aria-hidden="true"><use href="#icon-download"></use></svg><span>Export</span></button>
@@ -292,32 +290,11 @@
         </div>
 
         <aside id="aboutPlanner" class="planner-about-column" aria-label="Over deze site">
-            <section class="info-card planner-about-card">
-                <h2>Over de Duikplanner</h2>
-                <p>
-                    Stromingsplanner:
-                    <a href="https://rwsos.rws.nl/viewer/map/oosterschelde/stroming" target="_blank" rel="noopener noreferrer">stromingkaart RWS</a><br>
-                    Temperatuur en getijde:
-                    <a href="https://waterinfo.rws.nl/publiek/astronomische-getij" target="_blank" rel="noopener noreferrer">RWS kaart getijde en temperatuur</a><br>
-                    De Manta getijdentabel:
-                    <a href="https://www.demanta.be/getijden/" target="_blank" rel="noopener noreferrer">De Manta getijden</a>
-                </p>
-                <p>De planner is bedoeld als hulpmiddel voor de voorbereiding van een duik met inzicht in profiel, verbruik en belangrijke grenzen.</p>
-            </section>
 
-            <section class="info-card planner-about-card">
-                <h2>Wat je op de plannerpagina kunt doen</h2>
-                <ul>
-                    <li>Duikgegevens invullen zoals locatie, datum en kentering.</li>
-                    <li>Profiel en flesgegevens invullen voor berekende waarden.</li>
-                    <li>Duiktabelregels toevoegen en direct de impact zien op grafiek en statistieken.</li>
-                    <li>Je planning importeren, exporteren en als PDF bewaren.</li>
-                </ul>
-            </section>
 
             <section class="info-card planner-about-card">
                 <h2>Belangrijk</h2>
-                <p>Gebruik deze tool als ondersteuning en controleer je plan altijd met je opleiding, duikcomputer en buddyprocedure. Veiligheid blijft leidend.</p>
+                <p>Gebruik deze tool als ondersteuning. Controleer je plan altijd met je buddy, duikcomputer en theorie.</p>
             </section>
         </aside>
     </div>
@@ -328,6 +305,7 @@
                 <h2 id="mapOverlayTitle">Kaart Oosterschelde</h2>
                 <button id="closeMapOverlayBtn" class="header-btn map-overlay-close" type="button" aria-label="Sluit kaart">✕</button>
             </div>
+            
             <p>Klik op een pin en open de link in een nieuw tabblad om naar de stromingstabel van RWS te gaan.</p>
             <div class="iframe-map-wrap map-overlay-wrap">
                 <div id="osmDiveMapOverlay" class="osm-map" aria-label="Kaart met duiklocaties"></div>
@@ -338,7 +316,17 @@
                 (ODbL), conform
                 <a href="https://osm.wiki/Blocked" target="_blank" rel="noopener noreferrer">OSM tile usage policy</a>.
             </p>
-            <p><a href="https://www.openstreetmap.org/?bbox=3.574785944268058%2C51.4338365096352%2C4.362709738530668%2C51.74483914516523" target="_blank" rel="noopener noreferrer">Open grotere OpenStreetMap kaart</a></p>
+            <div class="map-overlay-about-text" aria-label="Over de Duikplanner">
+                <p>
+                    <br>
+                    Stromingsplanner:
+                    <a href="https://rwsos.rws.nl/viewer/map/oosterschelde/stroming" target="_blank" rel="noopener noreferrer">stromingkaart RWS</a><br>
+                    Temperatuur en getijde:
+                    <a href="https://waterinfo.rws.nl/publiek/astronomische-getij" target="_blank" rel="noopener noreferrer">RWS kaart getijde en temperatuur</a><br>
+                    De Manta getijdentabel:
+                    <a href="https://www.demanta.be/getijden/" target="_blank" rel="noopener noreferrer">De Manta getijden</a>
+                </p>
+            </div>
         </div>
     </div>
 
