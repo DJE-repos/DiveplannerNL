@@ -1317,8 +1317,9 @@ function calculatepO2() {
 		if (lowerLimit < 1.4 || eanx > 21) {
 			let modLimit;
 			if (eanx > 21 && eanx < 35) {
-				// Fixed MOD limit of 30m for EANx between 21 and 35
-				modLimit = 30;
+				// Calculate MOD limit and take the minimum with 30m safety limit
+				const calculatedLimit = ((lowerLimit / (eanx / 100)) - 1) * 10;
+				modLimit = Math.min(calculatedLimit, 30);
 			} else {
 				// Calculate MOD limit: [(lowerLimit / (eanx/100)) - 1] * 10
 				modLimit = ((lowerLimit / (eanx / 100)) - 1) * 10;
